@@ -6,6 +6,14 @@
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
   <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+      overflow: hidden;
+    }
+
     #overlay-button {
       position: fixed;
       bottom: 20px;
@@ -22,10 +30,88 @@
       cursor: pointer;
       display: none;
     }
+
+    #camera-status {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1200;
+      max-width: 90%;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.4;
+      backdrop-filter: blur(4px);
+    }
+
+    #camera-status.error {
+      background: rgba(160, 25, 25, 0.8);
+    }
+
+    #camera-status.ready {
+      background: rgba(20, 110, 65, 0.82);
+    }
+
+    #target-indicator {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 180px;
+      height: 180px;
+      border: 3px solid rgba(255, 255, 255, 0.7);
+      border-radius: 18px;
+      z-index: 1100;
+      pointer-events: none;
+      opacity: 0.9;
+      box-sizing: border-box;
+      display: none;
+    }
+
+    #target-indicator::before,
+    #target-indicator::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-color: #fff;
+      border-style: solid;
+    }
+
+    #target-indicator::before {
+      top: -3px;
+      left: -3px;
+      border-width: 4px 0 0 4px;
+      border-top-left-radius: 12px;
+    }
+
+    #target-indicator::after {
+      right: -3px;
+      bottom: -3px;
+      border-width: 0 4px 4px 0;
+      border-bottom-right-radius: 12px;
+    }
+
+    #target-indicator.active {
+      border-color: rgba(76, 255, 133, 0.95);
+      box-shadow: 0 0 18px rgba(76, 255, 133, 0.6);
+      display: block;
+    }
+
+    #target-indicator.inactive {
+      border-color: rgba(255, 215, 65, 0.9);
+      box-shadow: 0 0 14px rgba(255, 215, 65, 0.5);
+      display: block;
+    }
   </style>
 </head>
 <body>
 
+  <div id="camera-status">Memeriksa kamera...</div>
+  <div id="target-indicator" class="inactive"></div>
   <button id="overlay-button">Ketuk untuk Memulai Video</button>
 
   <!-- Ganti imageTargetSrc dengan file .mind Anda -->
@@ -59,9 +145,51 @@
     const video = document.querySelector('#my-video');
     const button = document.querySelector('#overlay-button');
     const scene = document.querySelector('a-scene');
+    const cameraStatus = document.getElementById('camera-status');
+    const targetIndicator = document.getElementById('target-indicator');
+
+    function setCameraStatus(message, type = '') {
+      cameraStatus.textContent = message;
+      cameraStatus.classList.remove('error', 'ready');
+      if (type) cameraStatus.classList.add(type);
+    }
+
+    function setTargetIndicator(state) {
+      targetIndicator.classList.remove('active', 'inactive');
+      if (state === 'active') {
+        targetIndicator.classList.add('active');
+      } else if (state === 'inactive') {
+        targetIndicator.classList.add('inactive');
+      } else {
+        targetIndicator.style.display = 'none';
+      }
+    }
+
+    async function detectCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraStatus('Browser Anda tidak mendukung kamera.', 'error');
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+          audio: false
+        });
+
+        setCameraStatus('Kamera aktif. Arahkan ke target AR.', 'ready');
+        setTargetIndicator('inactive');
+        stream.getTracks().forEach(track => track.stop());
+      } catch (error) {
+        setCameraStatus('Kamera tidak bisa diakses. Izinkan akses kamera di browser.', 'error');
+        setTargetIndicator('none');
+        console.error('Camera permission failed:', error);
+      }
+    }
 
     scene.addEventListener("ready", (event) => {
       console.log("Scene AR siap!");
+      detectCamera();
     });
 
     const target = document.querySelector('[mindar-image-target]');
@@ -69,6 +197,8 @@
         console.log("Target kartu nama ditemukan!");
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'none';
+        setCameraStatus('Target terdeteksi. Video siap diputar.', 'ready');
+        setTargetIndicator('active');
         video.play().catch(error => {
             console.log("Autoplay diblokir browser, menampilkan tombol.");
             button.style.display = 'block';
@@ -79,6 +209,8 @@
         console.log("Target kartu nama hilang.");
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'flex';
+        setCameraStatus('Target hilang. Arahkan kamera ke target lagi.', 'ready');
+        setTargetIndicator('inactive');
         video.pause();
     });
 
