@@ -88,6 +88,101 @@
       border-color: rgba(255, 215, 65, 0.9);
       box-shadow: 0 0 14px rgba(255, 215, 65, 0.5);
       display: block;
+      animation: scan-pulse 1.5s ease-in-out infinite;
+    }
+
+    #ar-controls {
+      position: fixed;
+      left: 50%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 1300;
+      display: none;
+      gap: 10px;
+      width: min(92vw, 380px);
+    }
+
+    #ar-controls.visible {
+      display: flex;
+    }
+
+    #ar-controls button {
+      flex: 1;
+      min-height: 48px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.78);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      backdrop-filter: blur(6px);
+    }
+
+    #ar-controls button:active {
+      background: rgba(30, 120, 75, 0.95);
+    }
+
+    #social-links {
+      position: fixed;
+      top: 50%;
+      right: max(12px, env(safe-area-inset-right));
+      transform: translateY(-50%);
+      z-index: 1300;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #social-links.visible {
+      display: flex;
+    }
+
+    #social-links a {
+      display: block;
+      min-width: 92px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.82);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      backdrop-filter: blur(6px);
+    }
+
+    #social-links a:active {
+      background: rgba(30, 120, 75, 0.95);
+    }
+
+    #gesture-hint {
+      position: fixed;
+      left: 50%;
+      bottom: 82px;
+      transform: translateX(-50%);
+      z-index: 1250;
+      width: max-content;
+      max-width: 88vw;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.78);
+      font-size: 14px;
+      line-height: 1.4;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+      pointer-events: none;
+    }
+
+    #gesture-hint.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    @keyframes scan-pulse {
+      50% { box-shadow: 0 0 20px rgba(255, 215, 65, 0.8); }
     }
   </style>
 </head>
@@ -95,6 +190,15 @@
 
   <div id="camera-status">Memeriksa kamera...</div>
   <div id="target-indicator" class="inactive"></div>
+  <div id="gesture-hint" role="status" aria-live="polite"></div>
+  <div id="ar-controls" aria-label="Kontrol AR">
+    <button id="reset-image" type="button">Atur ulang</button>
+    <button id="toggle-image" type="button">Sembunyikan gambar</button>
+  </div>
+  <nav id="social-links" aria-label="Tautan sekolah">
+    <a href="https://smkbinamandirimultimedia.sch.id/" target="_blank" rel="noopener noreferrer">Website</a>
+    <a href="https://www.instagram.com/smkbm_3/" target="_blank" rel="noopener noreferrer">Instagram</a>
+  </nav>
   <!-- Ganti imageTargetSrc dengan file .mind Anda -->
   <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     
@@ -132,11 +236,22 @@
     const scene = document.querySelector('a-scene');
     const cameraStatus = document.getElementById('camera-status');
     const targetIndicator = document.getElementById('target-indicator');
+    const gestureHint = document.getElementById('gesture-hint');
+    const controls = document.getElementById('ar-controls');
+    const socialLinks = document.getElementById('social-links');
+    const resetButton = document.getElementById('reset-image');
+    const toggleButton = document.getElementById('toggle-image');
     const target = document.querySelector('[mindar-image-target]');
     const rotatableImage = document.getElementById('rotatable-image');
     let targetVisible = false;
+    let imageEnabled = true;
     let activePointer = null;
     let previousPointerX = 0;
+    let gestureHintTimeout = null;
+    let animationFrame = null;
+    const activePointers = new Map();
+    let pinchStartDistance = 0;
+    let pinchStartScale = 1;
 
     function setCameraStatus(message, type = '') {
       cameraStatus.textContent = message;
@@ -153,6 +268,52 @@
       } else {
         targetIndicator.style.display = 'none';
       }
+    }
+
+    function updateImageVisibility() {
+      rotatableImage.object3D.visible = targetVisible && imageEnabled;
+      controls.classList.toggle('visible', targetVisible);
+      toggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
+    }
+
+    function showGestureHint(message, fadeDelay = 5000) {
+      window.clearTimeout(gestureHintTimeout);
+      gestureHint.textContent = message;
+      gestureHint.classList.add('visible');
+      gestureHintTimeout = window.setTimeout(() => {
+        gestureHint.classList.remove('visible');
+      }, fadeDelay);
+    }
+
+    function animateImageIn() {
+      if (animationFrame !== null) window.cancelAnimationFrame(animationFrame);
+
+      const duration = 450;
+      const startTime = performance.now();
+      const startZ = 0.4;
+      const endZ = 0.65;
+      rotatableImage.object3D.position.z = startZ;
+      rotatableImage.object3D.scale.setScalar(0.82);
+
+      function animate(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        rotatableImage.object3D.position.z = startZ + (endZ - startZ) * eased;
+        rotatableImage.object3D.scale.setScalar(0.82 + 0.18 * eased);
+        if (progress < 1 && targetVisible && imageEnabled) {
+          animationFrame = window.requestAnimationFrame(animate);
+        } else {
+          animationFrame = null;
+        }
+      }
+
+      animationFrame = window.requestAnimationFrame(animate);
+    }
+
+    function getPointerDistance() {
+      const points = Array.from(activePointers.values());
+      if (points.length < 2) return 0;
+      return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
     }
 
     async function detectCamera() {
@@ -188,7 +349,8 @@
       if (canvas.parentElement) canvas.parentElement.style.touchAction = 'none';
 
       document.addEventListener('pointerdown', event => {
-        if (!targetVisible) return;
+        if (!targetVisible || !imageEnabled ||
+            (event.target instanceof Element && event.target.closest('#ar-controls, #social-links'))) return;
 
         const bounds = canvas.getBoundingClientRect();
         pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
@@ -198,24 +360,57 @@
 
         if (raycaster.intersectObject(rotatableImage.object3D, true).length === 0) return;
 
-        activePointer = event.pointerId;
-        previousPointerX = event.clientX;
+        activePointers.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY,
+          type: event.pointerType
+        });
+
+        if (activePointers.size === 1) {
+          activePointer = event.pointerId;
+          previousPointerX = event.clientX;
+        } else if (activePointers.size === 2 && event.pointerType === 'touch') {
+          activePointer = null;
+          pinchStartDistance = getPointerDistance();
+          pinchStartScale = rotatableImage.object3D.scale.x;
+        }
       });
 
       document.addEventListener('pointermove', event => {
-        if (event.pointerId !== activePointer || !targetVisible) return;
+        if (!activePointers.has(event.pointerId) || !targetVisible || !imageEnabled) return;
 
-        const deltaX = event.clientX - previousPointerX;
-        rotatableImage.object3D.rotation.y += deltaX * 0.01;
-        previousPointerX = event.clientX;
+        activePointers.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY,
+          type: event.pointerType
+        });
+
+        if (activePointers.size >= 2 && pinchStartDistance > 0) {
+          const scale = pinchStartScale * getPointerDistance() / pinchStartDistance;
+          const clampedScale = Math.max(0.55, Math.min(1.6, scale));
+          rotatableImage.object3D.scale.setScalar(clampedScale);
+        } else if (event.pointerId === activePointer) {
+          const deltaX = event.clientX - previousPointerX;
+          rotatableImage.object3D.rotation.y += deltaX * 0.01;
+          previousPointerX = event.clientX;
+        }
         event.preventDefault();
       });
 
-      const stopRotationGesture = event => {
+      const stopGesture = event => {
+        activePointers.delete(event.pointerId);
         if (event.pointerId === activePointer) activePointer = null;
+        if (activePointers.size < 2) {
+          pinchStartDistance = 0;
+          const remaining = activePointers.entries().next();
+          if (!remaining.done) {
+            activePointer = remaining.value[0];
+            previousPointerX = remaining.value[1].x;
+          }
+        }
       };
-      document.addEventListener('pointerup', stopRotationGesture);
-      document.addEventListener('pointercancel', stopRotationGesture);
+      document.addEventListener('pointerup', stopGesture);
+      document.addEventListener('pointercancel', stopGesture);
     }
 
     scene.addEventListener("loaded", setupRotationControls, { once: true });
@@ -226,12 +421,33 @@
       detectCamera();
     });
 
+    resetButton.addEventListener('click', () => {
+      rotatableImage.object3D.rotation.set(0, 0, 0);
+      rotatableImage.object3D.scale.setScalar(1);
+      showGestureHint('Rotasi dan ukuran gambar dikembalikan ke awal.');
+    });
+
+    toggleButton.addEventListener('click', () => {
+      imageEnabled = !imageEnabled;
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }
+      updateImageVisibility();
+      if (imageEnabled) showGestureHint('Gambar ditampilkan kembali.');
+      else gestureHint.classList.remove('visible');
+    });
+
     target.addEventListener("targetFound", event => {
         console.log("Target kartu nama ditemukan!");
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'none';
         targetVisible = true;
-        setCameraStatus('Berhasil dipindai! Sentuh gambar, lalu usap ke kiri/kanan untuk memutar. Gambar berputar di tempat.', 'ready');
+        updateImageVisibility();
+        if (imageEnabled) animateImageIn();
+        socialLinks.classList.add('visible');
+        setCameraStatus('Target berhasil dipindai.', 'ready');
+        showGestureHint('Usap untuk memutar · cubit untuk zoom · gunakan tombol untuk reset/sembunyikan atau buka tautan sekolah.');
         setTargetIndicator('active');
     });
 
@@ -241,6 +457,15 @@
         if (overlay) overlay.style.display = 'flex';
         targetVisible = false;
         activePointer = null;
+        activePointers.clear();
+        window.clearTimeout(gestureHintTimeout);
+        gestureHint.classList.remove('visible');
+        if (animationFrame !== null) {
+          window.cancelAnimationFrame(animationFrame);
+          animationFrame = null;
+        }
+        socialLinks.classList.remove('visible');
+        updateImageVisibility();
         setCameraStatus('Target hilang. Arahkan kamera ke target lagi.', 'ready');
         setTargetIndicator('inactive');
     });
