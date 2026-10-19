@@ -177,9 +177,9 @@
       }
     }
 
-    function setupDragControls() {
-      if (setupDragControls.initialized) return;
-      setupDragControls.initialized = true;
+    function setupRotationControls() {
+      if (setupRotationControls.initialized) return;
+      setupRotationControls.initialized = true;
       const canvas = scene.canvas;
       const raycaster = new THREE.Raycaster();
       const pointer = new THREE.Vector2();
@@ -211,15 +211,15 @@
         event.preventDefault();
       });
 
-      const stopDragging = event => {
+      const stopRotationGesture = event => {
         if (event.pointerId === activePointer) activePointer = null;
       };
-      document.addEventListener('pointerup', stopDragging);
-      document.addEventListener('pointercancel', stopDragging);
+      document.addEventListener('pointerup', stopRotationGesture);
+      document.addEventListener('pointercancel', stopRotationGesture);
     }
 
-    scene.addEventListener("loaded", setupDragControls, { once: true });
-    if (scene.hasLoaded) setupDragControls();
+    scene.addEventListener("loaded", setupRotationControls, { once: true });
+    if (scene.hasLoaded) setupRotationControls();
 
     scene.addEventListener("ready", (event) => {
       console.log("Scene AR siap!");
@@ -231,7 +231,7 @@
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'none';
         targetVisible = true;
-        setCameraStatus('Target terdeteksi. Geser gambar untuk memutar 360°.', 'ready');
+        setCameraStatus('Berhasil dipindai! Sentuh gambar, lalu usap ke kiri/kanan untuk memutar. Gambar berputar di tempat.', 'ready');
         setTargetIndicator('active');
     });
 
