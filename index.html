@@ -5,6 +5,7 @@
   <title>Visual Feeder AR Business Card</title>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <style>
     body {
       margin: 0;
@@ -221,6 +222,108 @@
       visibility: visible;
     }
 
+    #hand-drawer {
+      position: fixed;
+      top: 50%;
+      right: max(12px, env(safe-area-inset-right));
+      width: 250px;
+      height: 250px;
+      transform: translateY(-50%) scale(0.88);
+      z-index: 1350;
+      display: none;
+      border: 1px solid rgba(90, 219, 255, 0.65);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 77, 135, 0.32), rgba(0, 12, 38, 0.72) 70%);
+      box-shadow: 0 0 18px rgba(0, 174, 255, 0.62), inset 0 0 28px rgba(0, 153, 255, 0.32);
+      backdrop-filter: blur(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #hand-drawer.visible {
+      display: block;
+      transform: translateY(-50%) scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #hand-drawer::before {
+      content: "CUBIT UNTUK PILIH";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 110px;
+      transform: translate(-50%, -50%);
+      color: rgba(185, 239, 255, 0.95);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-align: center;
+      text-shadow: 0 0 8px #00aaff;
+    }
+
+    #hand-drawer button {
+      position: absolute;
+      width: 86px;
+      min-height: 62px;
+      padding: 8px;
+      border: 1px solid rgba(116, 225, 255, 0.9);
+      border-radius: 18px;
+      background: rgba(0, 103, 201, 0.48);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(0, 174, 255, 0.7), inset 0 0 12px rgba(0, 153, 255, 0.24);
+      text-shadow: 0 0 7px rgba(110, 220, 255, 0.9);
+    }
+
+    #hand-reset {
+      top: 8px;
+      left: 82px;
+    }
+
+    #hand-toggle {
+      right: 4px;
+      bottom: 46px;
+    }
+
+    #hand-links {
+      bottom: 46px;
+      left: 4px;
+    }
+
+    #hand-drawer button.selected {
+      background: rgba(0, 195, 255, 0.78);
+      box-shadow: 0 0 24px rgba(0, 215, 255, 1), inset 0 0 16px rgba(255, 255, 255, 0.28);
+      transform: scale(1.08);
+    }
+
+    #hand-cursor {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 30px;
+      height: 30px;
+      z-index: 1400;
+      display: none;
+      border: 2px solid rgba(131, 240, 255, 0.95);
+      border-radius: 50%;
+      background: rgba(0, 174, 255, 0.28);
+      box-shadow: 0 0 16px rgba(0, 204, 255, 0.95), inset 0 0 10px rgba(0, 204, 255, 0.7);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    #hand-cursor.visible {
+      display: block;
+    }
+
+    #hand-cursor.pinching {
+      background: rgba(0, 235, 255, 0.82);
+      box-shadow: 0 0 22px rgba(0, 235, 255, 1), inset 0 0 12px rgba(255, 255, 255, 0.9);
+    }
+
     @keyframes scan-pulse {
       50% { box-shadow: 0 0 20px rgba(255, 215, 65, 0.8); }
     }
@@ -242,6 +345,12 @@
       <a href="https://www.instagram.com/smkbm_3/" target="_blank" rel="noopener noreferrer">Instagram</a>
     </nav>
   </div>
+  <div id="hand-drawer" role="group" aria-label="Laci kontrol gestur tangan">
+    <button id="hand-reset" type="button">Atur ulang</button>
+    <button id="hand-toggle" type="button">Sembunyikan gambar</button>
+    <button id="hand-links" type="button">Tautan</button>
+  </div>
+  <div id="hand-cursor" aria-hidden="true"></div>
   <!-- Ganti imageTargetSrc dengan file .mind Anda -->
   <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     
@@ -285,6 +394,11 @@
     const linksButton = document.getElementById('toggle-links');
     const resetButton = document.getElementById('reset-image');
     const toggleButton = document.getElementById('toggle-image');
+    const handDrawer = document.getElementById('hand-drawer');
+    const handCursor = document.getElementById('hand-cursor');
+    const handResetButton = document.getElementById('hand-reset');
+    const handToggleButton = document.getElementById('hand-toggle');
+    const handLinksButton = document.getElementById('hand-links');
     const target = document.querySelector('[mindar-image-target]');
     const rotatableImage = document.getElementById('rotatable-image');
     let targetVisible = false;
@@ -296,6 +410,15 @@
     const activePointers = new Map();
     let pinchStartDistance = 0;
     let pinchStartScale = 1;
+    let handTracker = null;
+    let handTrackingActive = false;
+    let handTrackingError = false;
+    let openPalmFrames = 0;
+    let closedPalmFrames = 0;
+    let openPalmLatched = false;
+    let pinchWasActive = false;
+    let highlightedHandButton = null;
+    let lastHandFrameTime = -1;
 
     function setCameraStatus(message, type = '') {
       cameraStatus.textContent = message;
@@ -319,6 +442,7 @@
       controls.classList.toggle('visible', targetVisible);
       linkMenu.classList.toggle('visible', targetVisible);
       toggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
+      handToggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
     }
 
     function showGestureHint(message, fadeDelay = 5000) {
@@ -361,6 +485,150 @@
       return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
     }
 
+    function landmarkDistance(first, second) {
+      return Math.hypot(first.x - second.x, first.y - second.y);
+    }
+
+    function isOpenPalm(landmarks) {
+      const wrist = landmarks[0];
+      const extendedFingers = [
+        [8, 6],
+        [12, 10],
+        [16, 14],
+        [20, 18]
+      ].filter(([tipIndex, jointIndex]) =>
+        landmarkDistance(wrist, landmarks[tipIndex]) >
+        landmarkDistance(wrist, landmarks[jointIndex]) * 1.12
+      ).length;
+      const palmWidth = landmarkDistance(landmarks[5], landmarks[17]);
+      return extendedFingers >= 4 && palmWidth > 0.12;
+    }
+
+    function getHandMenuButtonAt(x, y) {
+      if (!handDrawer.classList.contains('visible')) return null;
+      return Array.from(handDrawer.querySelectorAll('button')).find(button => {
+        const bounds = button.getBoundingClientRect();
+        return x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom;
+      }) || null;
+    }
+
+    function setHighlightedHandButton(button) {
+      if (highlightedHandButton === button) return;
+      if (highlightedHandButton) highlightedHandButton.classList.remove('selected');
+      highlightedHandButton = button;
+      if (highlightedHandButton) highlightedHandButton.classList.add('selected');
+    }
+
+    function closeHandDrawer() {
+      handDrawer.classList.remove('visible');
+      setHighlightedHandButton(null);
+    }
+
+    function handleHandResults(results) {
+      const landmarks = results.multiHandLandmarks && results.multiHandLandmarks[0];
+      if (!targetVisible || !landmarks) {
+        handCursor.classList.remove('visible');
+        setHighlightedHandButton(null);
+        openPalmFrames = 0;
+        closedPalmFrames++;
+        if (closedPalmFrames >= 3) {
+          openPalmLatched = false;
+          pinchWasActive = false;
+        }
+        return;
+      }
+
+      const fingertip = landmarks[8];
+      const screenX = fingertip.x * window.innerWidth;
+      const screenY = fingertip.y * window.innerHeight;
+      handCursor.style.left = `${screenX}px`;
+      handCursor.style.top = `${screenY}px`;
+      handCursor.classList.add('visible');
+
+      const palmIsOpen = isOpenPalm(landmarks);
+      if (palmIsOpen) {
+        openPalmFrames++;
+        closedPalmFrames = 0;
+        if (openPalmFrames >= 3 && !openPalmLatched) {
+          openPalmLatched = true;
+          const isOpen = handDrawer.classList.toggle('visible');
+          setHighlightedHandButton(null);
+          showGestureHint(isOpen
+            ? 'Laci gestur terbuka. Arahkan titik biru ke opsi, lalu cubit untuk memilih.'
+            : 'Laci gestur ditutup.');
+        }
+      } else {
+        openPalmFrames = 0;
+        closedPalmFrames++;
+        if (closedPalmFrames >= 3) openPalmLatched = false;
+      }
+
+      const selectedButton = getHandMenuButtonAt(screenX, screenY);
+      setHighlightedHandButton(selectedButton);
+      const pinchDistance = landmarkDistance(landmarks[4], landmarks[8]);
+      const isPinching = pinchDistance < 0.045;
+      handCursor.classList.toggle('pinching', isPinching);
+      if (isPinching && !pinchWasActive && selectedButton) selectedButton.click();
+      pinchWasActive = isPinching;
+    }
+
+    function startHandTracking() {
+      if (handTrackingActive) return;
+      if (typeof window.Hands !== 'function') {
+        handTrackingError = true;
+        setCameraStatus('Pelacakan tangan tidak tersedia. Gunakan tombol layar.', 'error');
+        console.error('MediaPipe Hands failed to load; touch controls remain available.');
+        return;
+      }
+
+      const cameraVideo = document.querySelector('a-scene video');
+      if (!cameraVideo) {
+        handTrackingError = true;
+        setCameraStatus('Video kamera AR tidak ditemukan untuk pelacakan tangan.', 'error');
+        console.error('MindAR camera video element was not found.');
+        return;
+      }
+
+      try {
+        handTracker = new window.Hands({
+          locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+        handTracker.setOptions({
+          maxNumHands: 1,
+          modelComplexity: 0,
+          minDetectionConfidence: 0.65,
+          minTrackingConfidence: 0.6
+        });
+        handTracker.onResults(handleHandResults);
+        handTrackingActive = true;
+
+        const processHandFrame = async () => {
+          if (!handTrackingActive) return;
+          try {
+            if (targetVisible && cameraVideo.readyState >= 2 &&
+                cameraVideo.currentTime !== lastHandFrameTime) {
+              lastHandFrameTime = cameraVideo.currentTime;
+              await handTracker.send({ image: cameraVideo });
+            }
+            window.setTimeout(processHandFrame, 100);
+          } catch (error) {
+            handTrackingActive = false;
+            handTrackingError = true;
+            handCursor.classList.remove('visible');
+            setCameraStatus('Pelacakan tangan gagal. Gunakan tombol layar.', 'error');
+            console.error('Hand tracking failed:', error);
+          }
+        };
+
+        processHandFrame();
+      } catch (error) {
+        handTrackingActive = false;
+        handTrackingError = true;
+        setCameraStatus('Pelacakan tangan gagal dimulai. Gunakan tombol layar.', 'error');
+        console.error('Unable to initialize hand tracking:', error);
+      }
+    }
+
     async function detectCamera() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setCameraStatus('Browser Anda tidak mendukung kamera.', 'error');
@@ -395,7 +663,7 @@
 
       document.addEventListener('pointerdown', event => {
         if (!targetVisible || !imageEnabled ||
-            (event.target instanceof Element && event.target.closest('#ar-controls, #link-menu'))) return;
+            (event.target instanceof Element && event.target.closest('#ar-controls, #link-menu, #hand-drawer'))) return;
 
         const bounds = canvas.getBoundingClientRect();
         pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
@@ -465,6 +733,7 @@
       console.log("Scene AR siap!");
       detectCamera();
     });
+    scene.addEventListener('arReady', startHandTracking, { once: true });
 
     resetButton.addEventListener('click', () => {
       rotatableImage.object3D.rotation.set(0, 0, 0);
@@ -489,6 +758,22 @@
       showGestureHint(isOpen ? 'Pilih Website atau Instagram untuk membuka tautan.' : 'Panel tautan ditutup.');
     });
 
+    handResetButton.addEventListener('click', () => {
+      resetButton.click();
+      closeHandDrawer();
+    });
+
+    handToggleButton.addEventListener('click', () => {
+      toggleButton.click();
+      handToggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
+      closeHandDrawer();
+    });
+
+    handLinksButton.addEventListener('click', () => {
+      linksButton.click();
+      closeHandDrawer();
+    });
+
     target.addEventListener("targetFound", event => {
         console.log("Target kartu nama ditemukan!");
         const overlay = document.querySelector('#scanning-overlay');
@@ -498,8 +783,13 @@
         if (imageEnabled) animateImageIn();
         linkMenu.classList.remove('open');
         linksButton.setAttribute('aria-expanded', 'false');
-        setCameraStatus('Target berhasil dipindai.', 'ready');
-        showGestureHint('Usap untuk memutar · cubit untuk zoom · gunakan tombol biru atau ketuk Tautan.');
+        setCameraStatus(
+          handTrackingError
+            ? 'Target berhasil dipindai. Gestur tangan tidak tersedia; gunakan tombol layar.'
+            : 'Target berhasil dipindai.',
+          handTrackingError ? 'error' : 'ready'
+        );
+        showGestureHint('Usap untuk memutar · cubit untuk zoom · buka telapak untuk menu gestur.');
         setTargetIndicator('active');
     });
 
@@ -518,6 +808,12 @@
         }
         linkMenu.classList.remove('open');
         linksButton.setAttribute('aria-expanded', 'false');
+        closeHandDrawer();
+        handCursor.classList.remove('visible', 'pinching');
+        openPalmFrames = 0;
+        closedPalmFrames = 0;
+        openPalmLatched = false;
+        pinchWasActive = false;
         updateImageVisibility();
         setCameraStatus('Target hilang. Arahkan kamera ke target lagi.', 'ready');
         setTargetIndicator('inactive');
