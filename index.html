@@ -91,115 +91,148 @@
       animation: scan-pulse 1.5s ease-in-out infinite;
     }
 
-    #ar-controls {
+    #game-drawer {
       position: fixed;
-      left: 50%;
-      bottom: calc(72px + env(safe-area-inset-bottom));
-      transform: translateX(-50%);
+      top: 50%;
+      left: -150px;
+      width: 300px;
+      height: 300px;
       z-index: 1300;
+      border: 1px solid rgba(91, 203, 255, 0.75);
+      border-left: 0;
+      border-radius: 0 150px 150px 0;
+      background: radial-gradient(ellipse at right, rgba(0, 117, 255, 0.28), rgba(0, 13, 40, 0.9) 72%);
+      box-shadow: 0 0 20px rgba(0, 153, 255, 0.52), inset -8px 0 24px rgba(0, 153, 255, 0.2);
+      backdrop-filter: blur(12px);
+      transform: translate(-90px, -50%);
+      transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
       display: none;
-      gap: 10px;
-      width: min(92vw, 380px);
     }
 
-    #ar-controls.visible {
-      display: flex;
+    #game-drawer.visible {
+      display: block;
     }
 
-    #ar-controls button {
-      flex: 1;
-      min-height: 52px;
+    #game-drawer.open {
+      transform: translate(0, -50%);
+    }
+
+    #game-drawer button {
       border: 1px solid rgba(91, 203, 255, 0.8);
-      border-radius: 14px;
-      background: rgba(0, 117, 255, 0.26);
+      background: rgba(0, 117, 255, 0.34);
       color: white;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: 0 0 10px rgba(0, 153, 255, 0.58), inset 0 0 12px rgba(0, 153, 255, 0.16);
+      box-shadow: 0 0 12px rgba(0, 153, 255, 0.62), inset 0 0 12px rgba(0, 153, 255, 0.2);
       backdrop-filter: blur(10px);
       text-shadow: 0 0 8px rgba(110, 220, 255, 0.9);
-      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      cursor: pointer;
     }
 
-    #ar-controls button:active,
-    #ar-controls button:focus-visible,
-    #toggle-links:focus-visible,
+    #game-drawer button:active,
+    #game-drawer button:focus-visible,
     #social-links a:focus-visible {
       outline: 2px solid rgba(177, 238, 255, 0.95);
       outline-offset: 2px;
-      background: rgba(0, 145, 255, 0.52);
-      box-shadow: 0 0 18px rgba(0, 174, 255, 0.9), inset 0 0 14px rgba(0, 153, 255, 0.3);
+      background: rgba(0, 145, 255, 0.6);
+      box-shadow: 0 0 20px rgba(0, 174, 255, 1), inset 0 0 14px rgba(0, 153, 255, 0.3);
     }
 
-    #ar-controls button:active {
-      transform: translateY(-2px);
-    }
-
-    #link-menu {
-      position: fixed;
+    #toggle-drawer {
+      position: absolute;
       top: 50%;
-      right: max(12px, env(safe-area-inset-right));
+      right: 0;
+      width: 60px;
+      min-height: 54px;
       transform: translateY(-50%);
-      z-index: 1300;
+      border-radius: 18px 0 0 18px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    #toggle-drawer::before {
+      content: "›";
+      display: block;
+      font-size: 24px;
+      line-height: 20px;
+    }
+
+    #game-drawer.open #toggle-drawer::before {
+      content: "‹";
+    }
+
+    .drawer-action {
+      position: absolute;
+      left: 158px;
+      width: 112px;
+      min-height: 56px;
+      padding: 8px 10px;
+      border-radius: 18px;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.88);
+      transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+
+    #drawer-reset {
+      top: 24px;
+    }
+
+    #drawer-toggle-image {
+      top: 122px;
+      left: 158px;
+      width: 72px;
+      min-height: 70px;
+      padding: 6px;
+      font-size: 12px;
+    }
+
+    #drawer-toggle-links {
+      bottom: 24px;
+    }
+
+    #game-drawer.open .drawer-action {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    #social-links {
+      position: absolute;
+      top: 50%;
+      left: 276px;
       display: none;
       flex-direction: column;
       gap: 10px;
+      width: 144px;
+      transform: translateY(-50%);
     }
 
-    #link-menu.visible {
+    #game-drawer.links-open #social-links {
       display: flex;
-    }
-
-    #toggle-links {
-      min-width: 92px;
-      min-height: 48px;
-      padding: 10px 14px;
-      border: 1px solid rgba(91, 203, 255, 0.85);
-      border-radius: 14px;
-      background: rgba(0, 117, 255, 0.3);
-      color: white;
-      font-size: 14px;
-      font-weight: 700;
-      box-shadow: 0 0 12px rgba(0, 153, 255, 0.62), inset 0 0 12px rgba(0, 153, 255, 0.18);
-      backdrop-filter: blur(10px);
-      text-shadow: 0 0 8px rgba(110, 220, 255, 0.9);
     }
 
     #social-links a {
       display: block;
-      min-width: 92px;
-      padding: 12px 14px;
-      border: 1px solid rgba(91, 203, 255, 0.8);
+      padding: 13px 12px;
+      border: 1px solid rgba(91, 203, 255, 0.85);
       border-radius: 14px;
-      background: rgba(0, 117, 255, 0.3);
+      background: rgba(0, 30, 74, 0.9);
       color: white;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       text-align: center;
       text-decoration: none;
-      box-shadow: 0 0 10px rgba(0, 153, 255, 0.5), inset 0 0 10px rgba(0, 153, 255, 0.16);
+      box-shadow: 0 0 12px rgba(0, 153, 255, 0.58), inset 0 0 12px rgba(0, 153, 255, 0.18);
       backdrop-filter: blur(10px);
       text-shadow: 0 0 8px rgba(110, 220, 255, 0.9);
-    }
-
-    #social-links {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #link-menu.open #social-links {
-      display: flex;
-    }
-
-    #social-links a:active {
-      background: rgba(0, 145, 255, 0.52);
     }
 
     #gesture-hint {
       position: fixed;
       left: 50%;
-      bottom: calc(136px + env(safe-area-inset-bottom));
+      bottom: max(18px, env(safe-area-inset-bottom));
       transform: translateX(-50%);
       z-index: 1250;
       width: max-content;
@@ -231,12 +264,11 @@
   <div id="camera-status">Memeriksa kamera...</div>
   <div id="target-indicator" class="inactive"></div>
   <div id="gesture-hint" role="status" aria-live="polite"></div>
-  <div id="ar-controls" aria-label="Kontrol AR">
-    <button id="reset-image" type="button">Atur ulang</button>
-    <button id="toggle-image" type="button">Sembunyikan gambar</button>
-  </div>
-  <div id="link-menu">
-    <button id="toggle-links" type="button" aria-expanded="false" aria-controls="social-links">Tautan</button>
+  <div id="game-drawer" aria-label="Menu AR">
+    <button id="toggle-drawer" type="button" aria-expanded="false" aria-controls="drawer-reset drawer-toggle-image drawer-toggle-links">MENU</button>
+    <button id="drawer-reset" class="drawer-action" type="button">Atur ulang</button>
+    <button id="drawer-toggle-image" class="drawer-action" type="button">Sembunyikan gambar</button>
+    <button id="drawer-toggle-links" class="drawer-action" type="button" aria-expanded="false" aria-controls="social-links">Tautan</button>
     <nav id="social-links" aria-label="Tautan sekolah">
       <a href="https://smkbinamandirimultimedia.sch.id/" target="_blank" rel="noopener noreferrer">Website</a>
       <a href="https://www.instagram.com/smkbm_3/" target="_blank" rel="noopener noreferrer">Instagram</a>
@@ -280,11 +312,11 @@
     const cameraStatus = document.getElementById('camera-status');
     const targetIndicator = document.getElementById('target-indicator');
     const gestureHint = document.getElementById('gesture-hint');
-    const controls = document.getElementById('ar-controls');
-    const linkMenu = document.getElementById('link-menu');
-    const linksButton = document.getElementById('toggle-links');
-    const resetButton = document.getElementById('reset-image');
-    const toggleButton = document.getElementById('toggle-image');
+    const gameDrawer = document.getElementById('game-drawer');
+    const drawerButton = document.getElementById('toggle-drawer');
+    const resetButton = document.getElementById('drawer-reset');
+    const toggleButton = document.getElementById('drawer-toggle-image');
+    const linksButton = document.getElementById('drawer-toggle-links');
     const target = document.querySelector('[mindar-image-target]');
     const rotatableImage = document.getElementById('rotatable-image');
     let targetVisible = false;
@@ -316,9 +348,14 @@
 
     function updateImageVisibility() {
       rotatableImage.object3D.visible = targetVisible && imageEnabled;
-      controls.classList.toggle('visible', targetVisible);
-      linkMenu.classList.toggle('visible', targetVisible);
+      gameDrawer.classList.toggle('visible', targetVisible);
       toggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
+    }
+
+    function closeDrawer() {
+      gameDrawer.classList.remove('open', 'links-open');
+      drawerButton.setAttribute('aria-expanded', 'false');
+      linksButton.setAttribute('aria-expanded', 'false');
     }
 
     function showGestureHint(message, fadeDelay = 5000) {
@@ -395,7 +432,7 @@
 
       document.addEventListener('pointerdown', event => {
         if (!targetVisible || !imageEnabled ||
-            (event.target instanceof Element && event.target.closest('#ar-controls, #link-menu'))) return;
+            (event.target instanceof Element && event.target.closest('#game-drawer'))) return;
 
         const bounds = canvas.getBoundingClientRect();
         pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
@@ -465,9 +502,20 @@
       console.log("Scene AR siap!");
       detectCamera();
     });
+
+    drawerButton.addEventListener('click', () => {
+      const isOpen = gameDrawer.classList.toggle('open');
+      drawerButton.setAttribute('aria-expanded', String(isOpen));
+      if (!isOpen) {
+        gameDrawer.classList.remove('links-open');
+        linksButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+
     resetButton.addEventListener('click', () => {
       rotatableImage.object3D.rotation.set(0, 0, 0);
       rotatableImage.object3D.scale.setScalar(1);
+      closeDrawer();
       showGestureHint('Rotasi dan ukuran gambar dikembalikan ke awal.');
     });
 
@@ -478,12 +526,13 @@
         animationFrame = null;
       }
       updateImageVisibility();
+      closeDrawer();
       if (imageEnabled) showGestureHint('Gambar ditampilkan kembali.');
       else gestureHint.classList.remove('visible');
     });
 
     linksButton.addEventListener('click', () => {
-      const isOpen = linkMenu.classList.toggle('open');
+      const isOpen = gameDrawer.classList.toggle('links-open');
       linksButton.setAttribute('aria-expanded', String(isOpen));
       showGestureHint(isOpen ? 'Pilih Website atau Instagram untuk membuka tautan.' : 'Panel tautan ditutup.');
     });
@@ -495,10 +544,9 @@
         targetVisible = true;
         updateImageVisibility();
         if (imageEnabled) animateImageIn();
-        linkMenu.classList.remove('open');
-        linksButton.setAttribute('aria-expanded', 'false');
+        closeDrawer();
         setCameraStatus('Target berhasil dipindai.', 'ready');
-        showGestureHint('Usap untuk memutar · cubit untuk zoom · gunakan tombol biru atau ketuk Tautan.');
+        showGestureHint('Usap gambar untuk memutar · cubit untuk zoom · buka MENU di kiri untuk kontrol.');
         setTargetIndicator('active');
     });
 
@@ -515,8 +563,7 @@
           window.cancelAnimationFrame(animationFrame);
           animationFrame = null;
         }
-        linkMenu.classList.remove('open');
-        linksButton.setAttribute('aria-expanded', 'false');
+        closeDrawer();
         updateImageVisibility();
         setCameraStatus('Target hilang. Arahkan kamera ke target lagi.', 'ready');
         setTargetIndicator('inactive');
