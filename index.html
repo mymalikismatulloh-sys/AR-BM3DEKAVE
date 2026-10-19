@@ -14,23 +14,6 @@
       overflow: hidden;
     }
 
-    #overlay-button {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      padding: 15px 25px;
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-family: sans-serif;
-      font-size: 16px;
-      cursor: pointer;
-      display: none;
-    }
-
     #camera-status {
       position: fixed;
       top: 16px;
@@ -112,27 +95,24 @@
 
   <div id="camera-status">Memeriksa kamera...</div>
   <div id="target-indicator" class="inactive"></div>
-  <button id="overlay-button">Ketuk untuk Memulai Video</button>
-
   <!-- Ganti imageTargetSrc dengan file .mind Anda -->
   <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     
     <a-assets>
-      <!-- Pastikan nama file sesuai dengan file yang ada di folder Video -->
-      <video id="my-video" loop="true" muted playsinline webkit-playsinline crossorigin="anonymous" src="Video/pecah lagu pecah lai.mp4"></video>
+      <img id="target-image" src="Karya/Artboard 1@300x-100.jpg">
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
-      <a-plane 
-        id="video-plane" 
-        src="#my-video" 
-        position="0 0.1 0" 
-        rotation="0 0 0" 
-        width="1" 
-        height="0.56" 
-        material="transparent: true; opacity: 0.95"
+      <a-plane
+        id="target-image-plane"
+        src="#target-image"
+        position="0 0 0.28"
+        rotation="90 0 0"
+        width="1"
+        height="1.78"
+        material="shader: flat"
       ></a-plane>
     </a-entity>
   </a-scene>
@@ -142,8 +122,6 @@
   </div>
 
   <script>
-    const video = document.querySelector('#my-video');
-    const button = document.querySelector('#overlay-button');
     const scene = document.querySelector('a-scene');
     const cameraStatus = document.getElementById('camera-status');
     const targetIndicator = document.getElementById('target-indicator');
@@ -197,12 +175,8 @@
         console.log("Target kartu nama ditemukan!");
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'none';
-        setCameraStatus('Target terdeteksi. Video siap diputar.', 'ready');
+        setCameraStatus('Target terdeteksi. Gambar AR ditampilkan.', 'ready');
         setTargetIndicator('active');
-        video.play().catch(error => {
-            console.log("Autoplay diblokir browser, menampilkan tombol.");
-            button.style.display = 'block';
-        });
     });
 
     target.addEventListener("targetLost", event => {
@@ -211,12 +185,6 @@
         if (overlay) overlay.style.display = 'flex';
         setCameraStatus('Target hilang. Arahkan kamera ke target lagi.', 'ready');
         setTargetIndicator('inactive');
-        video.pause();
-    });
-
-    button.addEventListener('click', function() {
-      video.play();
-      button.style.display = 'none';
     });
   </script>
 
