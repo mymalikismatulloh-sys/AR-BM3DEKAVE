@@ -94,7 +94,7 @@
     #ar-controls {
       position: fixed;
       left: 50%;
-      bottom: max(18px, env(safe-area-inset-bottom));
+      bottom: calc(72px + env(safe-area-inset-bottom));
       transform: translateX(-50%);
       z-index: 1300;
       display: none;
@@ -108,21 +108,34 @@
 
     #ar-controls button {
       flex: 1;
-      min-height: 48px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.78);
+      min-height: 52px;
+      border: 1px solid rgba(91, 203, 255, 0.8);
+      border-radius: 14px;
+      background: rgba(0, 117, 255, 0.26);
       color: white;
       font-size: 14px;
       font-weight: 600;
-      backdrop-filter: blur(6px);
+      box-shadow: 0 0 10px rgba(0, 153, 255, 0.58), inset 0 0 12px rgba(0, 153, 255, 0.16);
+      backdrop-filter: blur(10px);
+      text-shadow: 0 0 8px rgba(110, 220, 255, 0.9);
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    #ar-controls button:active,
+    #ar-controls button:focus-visible,
+    #toggle-links:focus-visible,
+    #social-links a:focus-visible {
+      outline: 2px solid rgba(177, 238, 255, 0.95);
+      outline-offset: 2px;
+      background: rgba(0, 145, 255, 0.52);
+      box-shadow: 0 0 18px rgba(0, 174, 255, 0.9), inset 0 0 14px rgba(0, 153, 255, 0.3);
     }
 
     #ar-controls button:active {
-      background: rgba(30, 120, 75, 0.95);
+      transform: translateY(-2px);
     }
 
-    #social-links {
+    #link-menu {
       position: fixed;
       top: 50%;
       right: max(12px, env(safe-area-inset-right));
@@ -133,33 +146,60 @@
       gap: 10px;
     }
 
-    #social-links.visible {
+    #link-menu.visible {
       display: flex;
+    }
+
+    #toggle-links {
+      min-width: 92px;
+      min-height: 48px;
+      padding: 10px 14px;
+      border: 1px solid rgba(91, 203, 255, 0.85);
+      border-radius: 14px;
+      background: rgba(0, 117, 255, 0.3);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(0, 153, 255, 0.62), inset 0 0 12px rgba(0, 153, 255, 0.18);
+      backdrop-filter: blur(10px);
+      text-shadow: 0 0 8px rgba(110, 220, 255, 0.9);
     }
 
     #social-links a {
       display: block;
       min-width: 92px;
       padding: 12px 14px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.82);
+      border: 1px solid rgba(91, 203, 255, 0.8);
+      border-radius: 14px;
+      background: rgba(0, 117, 255, 0.3);
       color: white;
       font-size: 14px;
       font-weight: 600;
       text-align: center;
       text-decoration: none;
-      backdrop-filter: blur(6px);
+      box-shadow: 0 0 10px rgba(0, 153, 255, 0.5), inset 0 0 10px rgba(0, 153, 255, 0.16);
+      backdrop-filter: blur(10px);
+      text-shadow: 0 0 8px rgba(110, 220, 255, 0.9);
+    }
+
+    #social-links {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #link-menu.open #social-links {
+      display: flex;
     }
 
     #social-links a:active {
-      background: rgba(30, 120, 75, 0.95);
+      background: rgba(0, 145, 255, 0.52);
     }
 
     #gesture-hint {
       position: fixed;
       left: 50%;
-      bottom: 82px;
+      bottom: calc(136px + env(safe-area-inset-bottom));
       transform: translateX(-50%);
       z-index: 1250;
       width: max-content;
@@ -195,10 +235,13 @@
     <button id="reset-image" type="button">Atur ulang</button>
     <button id="toggle-image" type="button">Sembunyikan gambar</button>
   </div>
-  <nav id="social-links" aria-label="Tautan sekolah">
-    <a href="https://smkbinamandirimultimedia.sch.id/" target="_blank" rel="noopener noreferrer">Website</a>
-    <a href="https://www.instagram.com/smkbm_3/" target="_blank" rel="noopener noreferrer">Instagram</a>
-  </nav>
+  <div id="link-menu">
+    <button id="toggle-links" type="button" aria-expanded="false" aria-controls="social-links">Tautan</button>
+    <nav id="social-links" aria-label="Tautan sekolah">
+      <a href="https://smkbinamandirimultimedia.sch.id/" target="_blank" rel="noopener noreferrer">Website</a>
+      <a href="https://www.instagram.com/smkbm_3/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    </nav>
+  </div>
   <!-- Ganti imageTargetSrc dengan file .mind Anda -->
   <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     
@@ -238,7 +281,8 @@
     const targetIndicator = document.getElementById('target-indicator');
     const gestureHint = document.getElementById('gesture-hint');
     const controls = document.getElementById('ar-controls');
-    const socialLinks = document.getElementById('social-links');
+    const linkMenu = document.getElementById('link-menu');
+    const linksButton = document.getElementById('toggle-links');
     const resetButton = document.getElementById('reset-image');
     const toggleButton = document.getElementById('toggle-image');
     const target = document.querySelector('[mindar-image-target]');
@@ -273,6 +317,7 @@
     function updateImageVisibility() {
       rotatableImage.object3D.visible = targetVisible && imageEnabled;
       controls.classList.toggle('visible', targetVisible);
+      linkMenu.classList.toggle('visible', targetVisible);
       toggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
     }
 
@@ -350,7 +395,7 @@
 
       document.addEventListener('pointerdown', event => {
         if (!targetVisible || !imageEnabled ||
-            (event.target instanceof Element && event.target.closest('#ar-controls, #social-links'))) return;
+            (event.target instanceof Element && event.target.closest('#ar-controls, #link-menu'))) return;
 
         const bounds = canvas.getBoundingClientRect();
         pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
@@ -438,6 +483,12 @@
       else gestureHint.classList.remove('visible');
     });
 
+    linksButton.addEventListener('click', () => {
+      const isOpen = linkMenu.classList.toggle('open');
+      linksButton.setAttribute('aria-expanded', String(isOpen));
+      showGestureHint(isOpen ? 'Pilih Website atau Instagram untuk membuka tautan.' : 'Panel tautan ditutup.');
+    });
+
     target.addEventListener("targetFound", event => {
         console.log("Target kartu nama ditemukan!");
         const overlay = document.querySelector('#scanning-overlay');
@@ -445,9 +496,10 @@
         targetVisible = true;
         updateImageVisibility();
         if (imageEnabled) animateImageIn();
-        socialLinks.classList.add('visible');
+        linkMenu.classList.remove('open');
+        linksButton.setAttribute('aria-expanded', 'false');
         setCameraStatus('Target berhasil dipindai.', 'ready');
-        showGestureHint('Usap untuk memutar · cubit untuk zoom · gunakan tombol untuk reset/sembunyikan atau buka tautan sekolah.');
+        showGestureHint('Usap untuk memutar · cubit untuk zoom · gunakan tombol biru atau ketuk Tautan.');
         setTargetIndicator('active');
     });
 
@@ -464,7 +516,8 @@
           window.cancelAnimationFrame(animationFrame);
           animationFrame = null;
         }
-        socialLinks.classList.remove('visible');
+        linkMenu.classList.remove('open');
+        linksButton.setAttribute('aria-expanded', 'false');
         updateImageVisibility();
         setCameraStatus('Target hilang. Arahkan kamera ke target lagi.', 'ready');
         setTargetIndicator('inactive');
