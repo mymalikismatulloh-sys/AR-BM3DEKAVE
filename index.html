@@ -40,55 +40,36 @@
 
     #target-indicator {
       position: fixed;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 180px;
-      height: 180px;
-      border: 3px solid rgba(255, 255, 255, 0.7);
-      border-radius: 18px;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       z-index: 1100;
       pointer-events: none;
-      opacity: 0.9;
-      box-sizing: border-box;
       display: none;
     }
 
-    #target-indicator::before,
-    #target-indicator::after {
-      content: "";
-      position: absolute;
-      width: 24px;
-      height: 24px;
-      border-color: #fff;
-      border-style: solid;
-    }
-
-    #target-indicator::before {
-      top: -3px;
-      left: -3px;
-      border-width: 4px 0 0 4px;
-      border-top-left-radius: 12px;
-    }
-
-    #target-indicator::after {
-      right: -3px;
-      bottom: -3px;
-      border-width: 0 4px 4px 0;
-      border-bottom-right-radius: 12px;
+    #target-indicator polygon {
+      fill: rgba(255, 215, 65, 0.06);
+      stroke: rgba(255, 215, 65, 0.95);
+      stroke-width: 5;
+      vector-effect: non-scaling-stroke;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 7px rgba(255, 215, 65, 0.75));
     }
 
     #target-indicator.active {
-      border-color: rgba(76, 255, 133, 0.95);
-      box-shadow: 0 0 18px rgba(76, 255, 133, 0.6);
       display: block;
     }
 
+    #target-indicator.active polygon {
+      fill: rgba(76, 255, 133, 0.08);
+      stroke: rgba(76, 255, 133, 0.98);
+      filter: drop-shadow(0 0 9px rgba(76, 255, 133, 0.8));
+    }
+
     #target-indicator.inactive {
-      border-color: rgba(255, 215, 65, 0.9);
-      box-shadow: 0 0 14px rgba(255, 215, 65, 0.5);
       display: block;
-      animation: scan-pulse 1.5s ease-in-out infinite;
+      animation: guide-pulse 1.6s ease-in-out infinite alternate;
     }
 
     #game-drawer {
@@ -117,6 +98,10 @@
       transform: translate(0, -50%);
     }
 
+    #game-drawer.open #drawer-wheel {
+      pointer-events: auto;
+    }
+
     #game-drawer button {
       border: 1px solid rgba(91, 203, 255, 0.8);
       background: rgba(0, 117, 255, 0.34);
@@ -138,11 +123,10 @@
 
     #toggle-drawer {
       position: absolute;
-      top: 50%;
+      top: 8px;
       right: 0;
       width: 60px;
       min-height: 54px;
-      transform: translateY(-50%);
       border-radius: 18px 0 0 18px;
       font-size: 12px;
       font-weight: 700;
@@ -160,52 +144,72 @@
       content: "‹";
     }
 
+    #drawer-wheel {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #drawer-wheel:active {
+      cursor: grabbing;
+    }
+
+    #drawer-wheel::before {
+      content: "";
+      position: absolute;
+      left: 178px;
+      top: 103px;
+      width: 94px;
+      height: 94px;
+      border: 1px dashed rgba(128, 223, 255, 0.45);
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(0, 153, 255, 0.22);
+      pointer-events: none;
+    }
+
+    #drawer-wheel::after {
+      content: "↻";
+      position: absolute;
+      left: 207px;
+      top: 131px;
+      color: rgba(177, 238, 255, 0.88);
+      font-size: 28px;
+      line-height: 36px;
+      text-shadow: 0 0 12px rgba(0, 174, 255, 0.95);
+      pointer-events: none;
+    }
+
     .drawer-action {
       position: absolute;
-      left: 158px;
-      width: 112px;
-      min-height: 56px;
-      padding: 8px 10px;
-      border-radius: 18px;
-      font-size: 13px;
+      left: 0;
+      top: 0;
+      width: 70px;
+      min-height: 48px;
+      padding: 6px;
+      border-radius: 16px;
+      font-size: 12px;
       font-weight: 700;
       opacity: 0;
       pointer-events: none;
-      transform: scale(0.88);
-      transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
-    }
-
-    #drawer-reset {
-      top: 24px;
-    }
-
-    #drawer-toggle-image {
-      top: 122px;
-      left: 158px;
-      width: 72px;
-      min-height: 70px;
-      padding: 6px;
-      font-size: 12px;
-    }
-
-    #drawer-toggle-links {
-      bottom: 24px;
+      transform: translate(-50%, -50%) rotate(var(--counter-rotation, 0deg));
+      transition: opacity 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     }
 
     #game-drawer.open .drawer-action {
       opacity: 1;
       pointer-events: auto;
-      transform: scale(1);
     }
 
     #social-links {
       position: absolute;
       top: 50%;
-      left: 276px;
+      left: calc(100% + 6px);
       display: none;
       flex-direction: column;
       gap: 10px;
-      width: 144px;
+      width: min(144px, calc(100vw - 166px));
       transform: translateY(-50%);
     }
 
@@ -254,21 +258,26 @@
       visibility: visible;
     }
 
-    @keyframes scan-pulse {
-      50% { box-shadow: 0 0 20px rgba(255, 215, 65, 0.8); }
+    @keyframes guide-pulse {
+      from { opacity: 0.48; }
+      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
 
   <div id="camera-status">Memeriksa kamera...</div>
-  <div id="target-indicator" class="inactive"></div>
+  <svg id="target-indicator" class="inactive" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+    <polygon id="target-indicator-shape" points="0,0 0,0 0,0 0,0"></polygon>
+  </svg>
   <div id="gesture-hint" role="status" aria-live="polite"></div>
   <div id="game-drawer" aria-label="Menu AR">
     <button id="toggle-drawer" type="button" aria-expanded="false" aria-controls="drawer-reset drawer-toggle-image drawer-toggle-links">MENU</button>
-    <button id="drawer-reset" class="drawer-action" type="button">Atur ulang</button>
-    <button id="drawer-toggle-image" class="drawer-action" type="button">Sembunyikan gambar</button>
-    <button id="drawer-toggle-links" class="drawer-action" type="button" aria-expanded="false" aria-controls="social-links">Tautan</button>
+    <div id="drawer-wheel">
+      <button id="drawer-reset" class="drawer-action" type="button">Atur ulang</button>
+      <button id="drawer-toggle-image" class="drawer-action" type="button">Sembunyikan gambar</button>
+      <button id="drawer-toggle-links" class="drawer-action" type="button" aria-expanded="false" aria-controls="social-links">Tautan</button>
+    </div>
     <nav id="social-links" aria-label="Tautan sekolah">
       <a href="https://smkbinamandirimultimedia.sch.id/" target="_blank" rel="noopener noreferrer">Website</a>
       <a href="https://www.instagram.com/smkbm_3/" target="_blank" rel="noopener noreferrer">Instagram</a>
@@ -311,8 +320,10 @@
     const scene = document.querySelector('a-scene');
     const cameraStatus = document.getElementById('camera-status');
     const targetIndicator = document.getElementById('target-indicator');
+    const targetIndicatorShape = document.getElementById('target-indicator-shape');
     const gestureHint = document.getElementById('gesture-hint');
     const gameDrawer = document.getElementById('game-drawer');
+    const drawerWheel = document.getElementById('drawer-wheel');
     const drawerButton = document.getElementById('toggle-drawer');
     const resetButton = document.getElementById('drawer-reset');
     const toggleButton = document.getElementById('drawer-toggle-image');
@@ -325,6 +336,11 @@
     let previousPointerX = 0;
     let gestureHintTimeout = null;
     let animationFrame = null;
+    let guideAnimationFrame = null;
+    let guideHideTimeout = null;
+    let drawerPointerId = null;
+    let lastDrawerPointerAngle = 0;
+    let drawerRotation = 0;
     const activePointers = new Map();
     let pinchStartDistance = 0;
     let pinchStartScale = 1;
@@ -341,9 +357,125 @@
         targetIndicator.classList.add('active');
       } else if (state === 'inactive') {
         targetIndicator.classList.add('inactive');
+        targetIndicator.style.display = 'block';
       } else {
         targetIndicator.style.display = 'none';
       }
+    }
+
+    function setGuidePoints(points) {
+      targetIndicatorShape.setAttribute(
+        'points',
+        points.map(point => `${point.x},${point.y}`).join(' ')
+      );
+    }
+
+    function getSmallGuidePoints() {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const size = Math.min(44, window.innerWidth * 0.14, window.innerHeight * 0.08);
+      const half = size / 2;
+      return [
+        { x: centerX - half, y: centerY - half },
+        { x: centerX + half, y: centerY - half },
+        { x: centerX + half, y: centerY + half },
+        { x: centerX - half, y: centerY + half }
+      ];
+    }
+
+    function getTargetScreenPoints() {
+      if (!scene.camera || !target.object3D) return null;
+      scene.object3D.updateMatrixWorld(true);
+      scene.camera.updateMatrixWorld(true);
+      const corners = [
+        [-0.5, -0.89, 0],
+        [0.5, -0.89, 0],
+        [0.5, 0.89, 0],
+        [-0.5, 0.89, 0]
+      ];
+      const points = corners.map(([x, y, z]) => {
+        const point = target.object3D.localToWorld(new THREE.Vector3(x, y, z));
+        point.project(scene.camera);
+        return {
+          x: (point.x + 1) * 0.5 * window.innerWidth,
+          y: (1 - point.y) * 0.5 * window.innerHeight
+        };
+      });
+      return points.every(point => Number.isFinite(point.x) && Number.isFinite(point.y))
+        ? points
+        : null;
+    }
+
+    function resetScanGuide() {
+      window.clearTimeout(guideHideTimeout);
+      if (guideAnimationFrame !== null) {
+        window.cancelAnimationFrame(guideAnimationFrame);
+        guideAnimationFrame = null;
+      }
+      targetIndicator.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+      setGuidePoints(getSmallGuidePoints());
+      setTargetIndicator('inactive');
+    }
+
+    function animateScanGuideToTarget() {
+      window.clearTimeout(guideHideTimeout);
+      const endPoints = getTargetScreenPoints();
+      if (!endPoints) {
+        setTargetIndicator('none');
+        return;
+      }
+
+      if (guideAnimationFrame !== null) window.cancelAnimationFrame(guideAnimationFrame);
+      const startPoints = getSmallGuidePoints();
+      const startTime = performance.now();
+      const duration = 420;
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const currentTargetPoints = getTargetScreenPoints() || endPoints;
+        setGuidePoints(startPoints.map((point, index) => ({
+          x: point.x + (currentTargetPoints[index].x - point.x) * eased,
+          y: point.y + (currentTargetPoints[index].y - point.y) * eased
+        })));
+
+        if (elapsed < 950 && targetVisible) {
+          guideAnimationFrame = window.requestAnimationFrame(animate);
+        } else {
+          guideAnimationFrame = null;
+        }
+      }
+
+      setTargetIndicator('active');
+      targetIndicator.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+      guideAnimationFrame = window.requestAnimationFrame(animate);
+      guideHideTimeout = window.setTimeout(() => {
+        if (targetVisible) setTargetIndicator('none');
+      }, 950);
+    }
+
+    function updateDrawerWheel() {
+      const actions = [resetButton, toggleButton, linksButton];
+      const baseAngles = [-90, 30, 150];
+      const pivotX = 225;
+      const pivotY = 150;
+      const radius = 40;
+      actions.forEach((button, index) => {
+        const angle = (baseAngles[index] + drawerRotation) * Math.PI / 180;
+        const centerX = pivotX + Math.cos(angle) * radius;
+        const centerY = pivotY + Math.sin(angle) * radius;
+        button.style.left = `${centerX}px`;
+        button.style.top = `${centerY}px`;
+        button.style.setProperty('--counter-rotation', `${-drawerRotation}deg`);
+      });
+    }
+
+    function getDrawerPointerAngle(event) {
+      const bounds = gameDrawer.getBoundingClientRect();
+      const pivotX = bounds.left + 225;
+      const pivotY = bounds.top + 150;
+      return Math.atan2(event.clientY - pivotY, event.clientX - pivotX) * 180 / Math.PI;
     }
 
     function updateImageVisibility() {
@@ -500,7 +632,12 @@
 
     scene.addEventListener("ready", (event) => {
       console.log("Scene AR siap!");
+      resetScanGuide();
       detectCamera();
+    });
+
+    window.addEventListener('resize', () => {
+      if (!targetVisible) resetScanGuide();
     });
 
     drawerButton.addEventListener('click', () => {
@@ -537,6 +674,32 @@
       showGestureHint(isOpen ? 'Pilih Website atau Instagram untuk membuka tautan.' : 'Panel tautan ditutup.');
     });
 
+    drawerWheel.addEventListener('pointerdown', event => {
+      if (!gameDrawer.classList.contains('open') ||
+          (event.target instanceof Element && event.target.closest('button, a'))) return;
+      drawerPointerId = event.pointerId;
+      lastDrawerPointerAngle = getDrawerPointerAngle(event);
+      drawerWheel.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+
+    drawerWheel.addEventListener('pointermove', event => {
+      if (event.pointerId !== drawerPointerId) return;
+      const currentAngle = getDrawerPointerAngle(event);
+      let delta = currentAngle - lastDrawerPointerAngle;
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+      drawerRotation = (drawerRotation + delta) % 360;
+      lastDrawerPointerAngle = currentAngle;
+      updateDrawerWheel();
+    });
+
+    const stopDrawerRotation = event => {
+      if (event.pointerId === drawerPointerId) drawerPointerId = null;
+    };
+    drawerWheel.addEventListener('pointerup', stopDrawerRotation);
+    drawerWheel.addEventListener('pointercancel', stopDrawerRotation);
+
     target.addEventListener("targetFound", event => {
         console.log("Target kartu nama ditemukan!");
         const overlay = document.querySelector('#scanning-overlay');
@@ -546,8 +709,8 @@
         if (imageEnabled) animateImageIn();
         closeDrawer();
         setCameraStatus('Target berhasil dipindai.', 'ready');
-        showGestureHint('Usap gambar untuk memutar · cubit untuk zoom · buka MENU di kiri untuk kontrol.');
-        setTargetIndicator('active');
+        showGestureHint('Usap gambar untuk memutar · cubit untuk zoom · buka MENU di kiri dan putar lacinya.');
+        animateScanGuideToTarget();
     });
 
     target.addEventListener("targetLost", event => {
@@ -557,6 +720,7 @@
         targetVisible = false;
         activePointer = null;
         activePointers.clear();
+        drawerPointerId = null;
         window.clearTimeout(gestureHintTimeout);
         gestureHint.classList.remove('visible');
         if (animationFrame !== null) {
@@ -566,8 +730,11 @@
         closeDrawer();
         updateImageVisibility();
         setCameraStatus('Target hilang. Arahkan kamera ke target lagi.', 'ready');
-        setTargetIndicator('inactive');
+        resetScanGuide();
     });
+
+    updateDrawerWheel();
+    resetScanGuide();
   </script>
 
 </body>
