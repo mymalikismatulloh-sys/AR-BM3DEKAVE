@@ -287,21 +287,24 @@
   <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     
     <a-assets>
-      <img id="target-image" src="Karya/Artboard 1@300x-100.jpg">
+      <img id="target-image-0" src="Karya/Artboard 1@300x-100.jpg">
+      <img id="target-image-1" src="Karya/Bilqis X DKV 01.png">
+      <img id="target-image-2" src="Karya/Rizka Afrilia Azzahra XI DKV 2 .png">
+      <img id="target-image-3" src="Karya/maaf salah masukin.jpg">
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0">
-      <a-entity id="rotatable-image" position="0 0 0.65">
+    <a-entity id="image-target-0" mindar-image-target="targetIndex: 0" data-image-id="target-image-0">
+      <a-entity id="rotatable-image-0" class="rotatable-image" position="0 0 0.65">
         <a-plane
-          src="#target-image"
+          src="#target-image-0"
           width="1"
           height="1.78"
           material="shader: flat"
         ></a-plane>
         <a-plane
-          src="#target-image"
+          src="#target-image-0"
           rotation="0 180 0"
           position="0 0 -0.002"
           width="1"
@@ -310,10 +313,31 @@
         ></a-plane>
       </a-entity>
     </a-entity>
+
+    <a-entity id="image-target-1" mindar-image-target="targetIndex: 1" data-image-id="target-image-1">
+      <a-entity id="rotatable-image-1" class="rotatable-image" position="0 0 0.65">
+        <a-plane src="#target-image-1" width="1" height="1.414" material="shader: flat"></a-plane>
+        <a-plane src="#target-image-1" rotation="0 180 0" position="0 0 -0.002" width="1" height="1.414" material="shader: flat"></a-plane>
+      </a-entity>
+    </a-entity>
+
+    <a-entity id="image-target-2" mindar-image-target="targetIndex: 2" data-image-id="target-image-2">
+      <a-entity id="rotatable-image-2" class="rotatable-image" position="0 0 0.65">
+        <a-plane src="#target-image-2" width="1" height="1.414" material="shader: flat"></a-plane>
+        <a-plane src="#target-image-2" rotation="0 180 0" position="0 0 -0.002" width="1" height="1.414" material="shader: flat"></a-plane>
+      </a-entity>
+    </a-entity>
+
+    <a-entity id="image-target-3" mindar-image-target="targetIndex: 3" data-image-id="target-image-3">
+      <a-entity id="rotatable-image-3" class="rotatable-image" position="0 0 0.65">
+        <a-plane src="#target-image-3" width="1" height="0.702" material="shader: flat"></a-plane>
+        <a-plane src="#target-image-3" rotation="0 180 0" position="0 0 -0.002" width="1" height="0.702" material="shader: flat"></a-plane>
+      </a-entity>
+    </a-entity>
   </a-scene>
 
   <div id="scanning-overlay" style="display: flex; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; z-index: 999; font-family: sans-serif; font-size: 20px;">
-    Arahkan kamera ke kartu nama...
+    Arahkan kamera ke salah satu gambar target AR...
   </div>
 
   <script>
@@ -328,8 +352,10 @@
     const resetButton = document.getElementById('drawer-reset');
     const toggleButton = document.getElementById('drawer-toggle-image');
     const linksButton = document.getElementById('drawer-toggle-links');
-    const target = document.querySelector('[mindar-image-target]');
-    const rotatableImage = document.getElementById('rotatable-image');
+    const targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
+    let activeTarget = null;
+    let activeTargetImage = null;
+    let rotatableImage = null;
     let targetVisible = false;
     let imageEnabled = true;
     let activePointer = null;
@@ -384,17 +410,18 @@
     }
 
     function getTargetScreenPoints() {
-      if (!scene.camera || !target.object3D) return null;
+      if (!scene.camera || !activeTarget || !activeTargetImage) return null;
       scene.object3D.updateMatrixWorld(true);
       scene.camera.updateMatrixWorld(true);
+      const halfHeight = activeTargetImage.naturalHeight / activeTargetImage.naturalWidth / 2;
       const corners = [
-        [-0.5, -0.89, 0],
-        [0.5, -0.89, 0],
-        [0.5, 0.89, 0],
-        [-0.5, 0.89, 0]
+        [-0.5, -halfHeight, 0],
+        [0.5, -halfHeight, 0],
+        [0.5, halfHeight, 0],
+        [-0.5, halfHeight, 0]
       ];
       const points = corners.map(([x, y, z]) => {
-        const point = target.object3D.localToWorld(new THREE.Vector3(x, y, z));
+        const point = activeTarget.object3D.localToWorld(new THREE.Vector3(x, y, z));
         point.project(scene.camera);
         return {
           x: (point.x + 1) * 0.5 * window.innerWidth,
@@ -700,8 +727,12 @@
     drawerWheel.addEventListener('pointerup', stopDrawerRotation);
     drawerWheel.addEventListener('pointercancel', stopDrawerRotation);
 
-    target.addEventListener("targetFound", event => {
-        console.log("Target kartu nama ditemukan!");
+    targets.forEach(target => {
+      target.addEventListener("targetFound", () => {
+        console.log(`Target gambar ${target.id} ditemukan!`);
+        activeTarget = target;
+        activeTargetImage = document.getElementById(target.dataset.imageId);
+        rotatableImage = target.querySelector('.rotatable-image');
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'none';
         targetVisible = true;
@@ -711,10 +742,11 @@
         setCameraStatus('Target berhasil dipindai.', 'ready');
         showGestureHint('Usap gambar untuk memutar · cubit untuk zoom · buka MENU di kiri dan putar lacinya.');
         animateScanGuideToTarget();
-    });
+      });
 
-    target.addEventListener("targetLost", event => {
-        console.log("Target kartu nama hilang.");
+      target.addEventListener("targetLost", () => {
+        if (activeTarget !== target) return;
+        console.log(`Target gambar ${target.id} hilang.`);
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'flex';
         targetVisible = false;
@@ -729,8 +761,12 @@
         }
         closeDrawer();
         updateImageVisibility();
-        setCameraStatus('Target hilang. Arahkan kamera ke target lagi.', 'ready');
+        setCameraStatus('Target hilang. Arahkan kamera ke salah satu gambar target lagi.', 'ready');
+        activeTarget = null;
+        activeTargetImage = null;
+        rotatableImage = null;
         resetScanGuide();
+      });
     });
 
     updateDrawerWheel();
