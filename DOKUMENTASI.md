@@ -101,17 +101,20 @@ File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar 
 
 ### 2. 🔲 Panduan Pemindaian Cerdas (*Dynamic Scanning Indicator*)
 - Kartu panduan mengarahkan pengguna mencari marker, menjaga pencahayaan, dan mengembalikan pengguna ke mode pemindaian saat marker hilang.
-- Elemen SVG memberikan retikel lembut di tengah layar saat mencari target. Saat target terdeteksi (`targetFound`), garis hijau mengikuti proyeksi keempat sudut marker secara terus-menerus hingga marker hilang; rasio marker berasal dari ukuran gambar target sehingga bingkai menyesuaikan bentuk, perspektif, jarak, dan pergerakan kamera.
+- Elemen SVG memberikan retikel lembut di tengah layar saat mencari target. Saat target terdeteksi (`targetFound`), garis hijau mengikuti proyeksi keempat sudut marker selama sekitar 1,2 detik lalu menghilang; retikel pencarian kembali jika marker hilang. Rasio marker berasal dari ukuran gambar target sehingga bingkai menyesuaikan bentuk, perspektif, jarak, dan pergerakan kamera.
 - Panduan menghormati pengaturan **reduced motion** pada perangkat.
 
-### 3. ✨ Animasi Masuk 3D yang Halus (*Smooth Zoom & Elevation Entrance*)
-- Ketika target terdeteksi, objek 3D tidak langsung muncul secara kaku, melainkan menggunakan interpolasi matematis kurva *ease-out* (`animateImageIn`) dari posisi `z: 0.4` ke `z: 0.65` dengan efek *scaling* dinamis.
+### 3. ✨ Animasi Masuk 3D & Tracking Stabil (*Smooth Entrance & Pose Filtering*)
+- Saat marker baru terdeteksi, anchor konten diselaraskan langsung ke pose target agar tidak meloncat dari posisi awal.
+- Konten tampil di bawah anchor tampilan terpisah yang mengikuti pose marker dengan filter waktu eksponensial 65 ms. Ini meredam getaran kecil tracking tanpa mengubah pose marker MindAR atau gerakan rotasi pengguna.
+- Animasi masuk tetap menggunakan kurva *ease-out* (`animateImageIn`) dengan efek *scaling* dinamis.
 
 ### 4. 👆 Kontrol Interaksi Sentuhan Lengkap (*Multi-Touch Gestures*)
 - **Rotasi 360° Bebas (1 Jari / Drag Mouse):** Saat marker terdeteksi, usap area kamera ke kiri/kanan untuk memutar sumbu Y atau ke atas/bawah untuk memutar sumbu X. Drag ditangkap oleh kanvas AR agar tetap terbaca saat jari bergerak; rotasi dapat berlanjut melewati satu putaran penuh.
 - **Pinch to Zoom (2 Jari):** Mencubit layar untuk memperbesar atau memperkecil skala karya 3D secara dinamis dengan batas aman (*clamped* antara `0.55x` hingga `1.6x`).
-- **Deteksi Presisi (Raycasting THREE.js):** Sentuhan hanya merespons jika jari mengenai area objek 3D karya seni, sehingga tidak mengganggu interaksi UI lainnya.
+- **Drag Stabil:** Satu jari pada kanvas kamera ditangkap selama gesture sehingga rotasi horizontal dan vertikal tetap terbaca meski jari sedikit keluar dari bidang karya.
 - **Kontrol Rotasi di Layar:** Tombol arah memutar karya per 15° pada sumbu X/Y dan tersedia selama marker terdeteksi. Menu **Atur ulang** mengembalikan rotasi ke awal.
+- **Rekomendasi rotasi paling stabil:** gunakan tombol arah untuk penyetelan sudut kecil, lalu drag satu jari untuk melihat karya dari sudut bebas; tahan HP dengan kedua tangan atau sangga di permukaan agar tracking marker tidak ikut berguncang.
 
 ### 5. 🎛️ Menu Laci Melingkar Futuristik (*Futuristic Radial Menu Drawer*)
 - Tombol **MENU** neon bergaya sci-fi di tepi kiri layar yang dapat ditarik (*expand/collapse*).
