@@ -1,0 +1,67 @@
+{
+  "project_id": "af82139e-62c3-4d9d-b780-5e2bf4879aab",
+  "image_name": "Screenshot 2026-10-26 153942.png",
+  "image_width": 783,
+  "image_height": 922,
+  "format": "PNG",
+  "created_at": "2026-10-26T08:41:36.775639+00:00",
+  "model_used": "u2net",
+  "inpainting_method": "telea",
+  "layers": [
+    {
+      "id": "layer-1",
+      "name": "Foreground - Main Subject",
+      "layer_type": "foreground",
+      "order": 0,
+      "depth": 0.6,
+      "visible": true,
+      "filename": "01_foreground.png",
+      "preview_url": "/api/projects/af82139e-62c3-4d9d-b780-5e2bf4879aab/layers/01_foreground.png/preview",
+      "download_url": "/api/projects/af82139e-62c3-4d9d-b780-5e2bf4879aab/layers/01_foreground.png/download",
+      "width": 783,
+      "height": 922,
+      "has_inpainting": false,
+      "confidence": 0.98,
+      "notes": "AI-isolated subject (55.9% canvas coverage)"
+    },
+    {
+      "id": "layer-2",
+      "name": "Midground - Environment Elements",
+      "layer_type": "midground",
+      "order": 1,
+      "depth": 1.0,
+      "visible": true,
+      "filename": "02_midground.png",
+      "preview_url": "/api/projects/af82139e-62c3-4d9d-b780-5e2bf4879aab/layers/02_midground.png/preview",
+      "download_url": "/api/projects/af82139e-62c3-4d9d-b780-5e2bf4879aab/layers/02_midground.png/download",
+      "width": 783,
+      "height": 922,
+      "has_inpainting": true,
+      "confidence": 0.9,
+      "notes": "Environmental terrain & structures (25.9% coverage)"
+    },
+    {
+      "id": "layer-3",
+      "name": "Background Plate - Atmosphere & Backdrop",
+      "layer_type": "background",
+      "order": 2,
+      "depth": 1.0,
+      "visible": true,
+      "filename": "03_background.png",
+      "preview_url": "/api/projects/af82139e-62c3-4d9d-b780-5e2bf4879aab/layers/03_background.png/preview",
+      "download_url": "/api/projects/af82139e-62c3-4d9d-b780-5e2bf4879aab/layers/03_background.png/download",
+      "width": 783,
+      "height": 922,
+      "has_inpainting": true,
+      "confidence": 0.85,
+      "notes": "Fully reconstructed background backdrop behind foreground subjects"
+    }
+  ],
+  "warnings": [
+    "Wide occlusion: 'foreground subject' covers 55.9% of the scene. Background behind it was reconstructed with AI synthesis and may contain structural approximations.",
+    "Complex texture boundary: 'foreground subject' overlaps intricate patterns or detailed edges. Seam blending was applied, but fine geometric details behind the subject cannot be uniquely reconstructed.",
+    "High background disparity: Flanking colors around 'foreground subject' differ substantially. Background gradient transition was smoothed across the reconstructed gap.",
+    "Moderate occlusion: 'midground environment' covers 25.9% of the canvas. Background textures were extrapolated from neighboring areas."
+  ],
+  "depth_map_url": "/api/projects/af82139e-62c3-4d9d-b780-5e2bf4879aab/depth-map"
+}
