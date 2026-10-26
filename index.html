@@ -533,7 +533,6 @@
     let activeTarget = null;
     let activeTargetImage = null;
     let rotatableImage = null;
-    let activePoseRoot = null;
     let targetVisible = false;
     let imageEnabled = true;
     let activePointer = null;
@@ -543,19 +542,12 @@
     let animationFrame = null;
     let guideAnimationFrame = null;
     let guideHideTimeout = null;
-    let poseAnimationFrame = null;
-    let lastPoseFrameTime = 0;
     let drawerPointerId = null;
     let lastDrawerPointerAngle = 0;
     let drawerRotation = 0;
     const activePointers = new Map();
     let pinchStartDistance = 0;
     let pinchStartScale = 1;
-    const targetWorldPosition = new THREE.Vector3();
-    const targetWorldQuaternion = new THREE.Quaternion();
-    const sceneWorldQuaternion = new THREE.Quaternion();
-    const localTargetQuaternion = new THREE.Quaternion();
-    const POSE_SMOOTHING_MS = 65;
     const SCAN_GUIDE_VISIBLE_MS = 1200;
 
     function setCameraStatus(message, type = '') {
@@ -679,38 +671,6 @@
           guideAnimationFrame = null;
         }
       }, SCAN_GUIDE_VISIBLE_MS);
-    }
-
-    function updateSmoothedTargetPose(now) {
-      poseAnimationFrame = null;
-      if (!targetVisible || !activeTarget || !activePoseRoot) return;
-
-      const delta = lastPoseFrameTime ? Math.min(now - lastPoseFrameTime, 100) : 16;
-      lastPoseFrameTime = now;
-      scene.object3D.updateMatrixWorld(true);
-      activeTarget.object3D.getWorldPosition(targetWorldPosition);
-      scene.object3D.worldToLocal(targetWorldPosition);
-      activeTarget.object3D.getWorldQuaternion(targetWorldQuaternion);
-      scene.object3D.getWorldQuaternion(sceneWorldQuaternion);
-      localTargetQuaternion.copy(sceneWorldQuaternion).invert().multiply(targetWorldQuaternion);
-
-      const smoothing = 1 - Math.exp(-delta / POSE_SMOOTHING_MS);
-      activePoseRoot.object3D.position.lerp(targetWorldPosition, smoothing);
-      activePoseRoot.object3D.quaternion.slerp(localTargetQuaternion, smoothing);
-      poseAnimationFrame = window.requestAnimationFrame(updateSmoothedTargetPose);
-    }
-
-    function syncPoseRootToTarget(target, poseRoot) {
-      scene.object3D.updateMatrixWorld(true);
-      target.object3D.getWorldPosition(targetWorldPosition);
-      scene.object3D.worldToLocal(targetWorldPosition);
-      target.object3D.getWorldQuaternion(targetWorldQuaternion);
-      scene.object3D.getWorldQuaternion(sceneWorldQuaternion);
-      localTargetQuaternion.copy(sceneWorldQuaternion).invert().multiply(targetWorldQuaternion);
-      poseRoot.object3D.position.copy(targetWorldPosition);
-      poseRoot.object3D.quaternion.copy(localTargetQuaternion);
-      poseRoot.object3D.visible = true;
-      lastPoseFrameTime = performance.now();
     }
 
     function updateDrawerWheel() {
@@ -1022,33 +982,16 @@
 
     targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
     targets.forEach(target => {
-      const poseRoot = document.createElement('a-entity');
-      poseRoot.id = `${target.id}-pose`;
-      poseRoot.object3D.visible = false;
-      poseRoot.removeAttribute('position');
-      poseRoot.removeAttribute('rotation');
-      scene.append(poseRoot);
-      const targetContent = target.querySelector('.rotatable-image');
-      if (!targetContent) {
-        throw new Error(`Konten AR untuk target "${target.id}" tidak ditemukan.`);
-      }
-      targetContent.remove();
-      poseRoot.append(targetContent);
-
       target.addEventListener("targetFound", () => {
         console.log(`Target gambar ${target.id} ditemukan!`);
-        if (activePoseRoot && activePoseRoot !== poseRoot) {
-          activePoseRoot.object3D.visible = false;
-        }
         activeTarget = target;
         activeTargetImage = document.getElementById(target.dataset.imageId);
-        activePoseRoot = poseRoot;
-        rotatableImage = targetContent;
-        syncPoseRootToTarget(target, poseRoot);
-        if (poseAnimationFrame !== null) {
-          window.cancelAnimationFrame(poseAnimationFrame);
+        rotatableImage = target.querySelector('.rotatable-image');
+        if (!rotatableImage) {
+          console.error(`Konten AR untuk target "${target.id}" tidak ditemukan.`);
+          setCameraStatus('Konten karya AR gagal dimuat.', 'error');
+          return;
         }
-        poseAnimationFrame = window.requestAnimationFrame(updateSmoothedTargetPose);
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'none';
         const video = target.querySelector('video');
@@ -1066,7 +1009,6 @@
       target.addEventListener("targetLost", () => {
         if (activeTarget !== target) return;
         console.log(`Target gambar ${target.id} hilang.`);
-        poseRoot.object3D.visible = false;
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'flex';
         const video = target.querySelector('video');
@@ -1081,10 +1023,6 @@
           window.cancelAnimationFrame(animationFrame);
           animationFrame = null;
         }
-        if (poseAnimationFrame !== null) {
-          window.cancelAnimationFrame(poseAnimationFrame);
-          poseAnimationFrame = null;
-        }
         closeDrawer();
         updateImageVisibility();
         setCameraStatus('Marker hilang. Arahkan kamera ke marker lagi.', 'ready');
@@ -1092,7 +1030,6 @@
         activeTarget = null;
         activeTargetImage = null;
         rotatableImage = null;
-        activePoseRoot = null;
         resetScanGuide();
       });
     });

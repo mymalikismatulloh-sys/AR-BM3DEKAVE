@@ -104,10 +104,10 @@ File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar 
 - Elemen SVG memberikan retikel lembut di tengah layar saat mencari target. Saat target terdeteksi (`targetFound`), garis hijau mengikuti proyeksi keempat sudut marker selama sekitar 1,2 detik lalu menghilang; retikel pencarian kembali jika marker hilang. Rasio marker berasal dari ukuran gambar target sehingga bingkai menyesuaikan bentuk, perspektif, jarak, dan pergerakan kamera.
 - Panduan menghormati pengaturan **reduced motion** pada perangkat.
 
-### 3. ✨ Animasi Masuk 3D & Tracking Stabil (*Smooth Entrance & Pose Filtering*)
-- Saat marker baru terdeteksi, anchor konten diselaraskan langsung ke pose target agar tidak meloncat dari posisi awal.
-- Konten tampil di bawah anchor tampilan terpisah yang mengikuti pose marker dengan filter waktu eksponensial 65 ms. Ini meredam getaran kecil tracking tanpa mengubah pose marker MindAR atau gerakan rotasi pengguna.
-- Animasi masuk tetap menggunakan kurva *ease-out* (`animateImageIn`) dengan efek *scaling* dinamis.
+### 3. ✨ Animasi Masuk 3D & Tracking Marker
+- Objek 3D tetap berada di dalam hierarchy target MindAR agar posisinya selalu tertambat dengan benar pada marker.
+- Animasi masuk menggunakan kurva *ease-out* (`animateImageIn`) dengan efek *scaling* dinamis.
+- Untuk mengurangi getaran saat memindai, jaga jarak dan pencahayaan tetap stabil serta tahan HP dengan kedua tangan atau sangga pada permukaan.
 
 ### 4. 👆 Kontrol Interaksi Sentuhan Lengkap (*Multi-Touch Gestures*)
 - **Rotasi 360° Bebas (1 Jari / Drag Mouse):** Saat marker terdeteksi, usap area kamera ke kiri/kanan untuk memutar sumbu Y atau ke atas/bawah untuk memutar sumbu X. Drag ditangkap oleh kanvas AR agar tetap terbaca saat jari bergerak; rotasi dapat berlanjut melewati satu putaran penuh.
