@@ -38,6 +38,97 @@
       background: rgba(20, 110, 65, 0.82);
     }
 
+    #camera-status.loading::before {
+      content: "";
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      margin-right: 9px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      vertical-align: -1px;
+      animation: status-spin 0.8s linear infinite;
+    }
+
+    #scanning-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0, 0, 0, 0.22);
+      pointer-events: none;
+      font-family: sans-serif;
+    }
+
+    #scan-guidance {
+      width: min(360px, 88vw);
+      padding: 22px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      background: rgba(7, 15, 25, 0.84);
+      box-shadow: 0 14px 48px rgba(0, 0, 0, 0.35);
+      text-align: center;
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+    }
+
+    #scan-guidance h1 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    #scan-guidance p {
+      margin: 0;
+      color: #c3d1df;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    #retry-camera {
+      display: inline-flex;
+      margin: 16px auto 0;
+      padding: 10px 16px;
+      border: 1px solid #57d2d9;
+      border-radius: 10px;
+      background: #087f91;
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #retry-camera:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    #retry-camera:not(.visible) {
+      display: none;
+    }
+
+    #retry-camera.visible {
+      display: inline-flex;
+    }
+
+    #studio-sync-status {
+      position: fixed;
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1200;
+      max-width: 90%;
+      padding: 6px 11px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.58);
+      color: #d5e5f2;
+      font-size: 11px;
+      text-align: center;
+    }
+
     #target-indicator {
       position: fixed;
       inset: 0;
@@ -70,6 +161,62 @@
     #target-indicator.inactive {
       display: block;
       animation: guide-pulse 1.6s ease-in-out infinite alternate;
+    }
+
+    #rotation-controller {
+      position: fixed;
+      right: max(14px, env(safe-area-inset-right));
+      bottom: max(76px, calc(env(safe-area-inset-bottom) + 64px));
+      z-index: 1250;
+      display: none;
+      grid-template-columns: repeat(3, 44px);
+      grid-template-rows: auto repeat(2, 44px);
+      align-items: center;
+      justify-items: center;
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid rgba(91, 203, 255, 0.65);
+      border-radius: 16px;
+      background: rgba(0, 13, 40, 0.86);
+      box-shadow: 0 0 18px rgba(0, 153, 255, 0.35);
+      backdrop-filter: blur(10px);
+    }
+
+    #rotation-controller.visible {
+      display: grid;
+    }
+
+    #rotation-controller h2 {
+      grid-column: 1 / -1;
+      margin: 0 0 2px;
+      color: #d7f4ff;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    #rotation-controller button {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border: 1px solid rgba(91, 203, 255, 0.75);
+      border-radius: 12px;
+      background: rgba(0, 117, 255, 0.3);
+      color: white;
+      font-size: 20px;
+      touch-action: manipulation;
+    }
+
+    #rotation-controller button:active,
+    #rotation-controller button:focus-visible {
+      outline: 2px solid rgba(177, 238, 255, 0.95);
+      outline-offset: 2px;
+      background: rgba(0, 145, 255, 0.65);
+    }
+
+    #rotation-controller [data-axis="x"] {
+      color: #9fe8ff;
+      font-size: 11px;
+      font-weight: 700;
     }
 
     #game-drawer {
@@ -262,15 +409,36 @@
       from { opacity: 0.48; }
       to { opacity: 1; }
     }
+
+    @keyframes status-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #camera-status.loading::before,
+      #target-indicator.inactive {
+        animation: none;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <div id="camera-status">Memeriksa kamera...</div>
+  <div id="camera-status" class="loading" role="status" aria-live="polite">Memeriksa kamera...</div>
+  <div id="studio-sync-status" role="status" aria-live="polite">Memeriksa katalog Studio...</div>
   <svg id="target-indicator" class="inactive" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
     <polygon id="target-indicator-shape" points="0,0 0,0 0,0 0,0"></polygon>
   </svg>
   <div id="gesture-hint" role="status" aria-live="polite"></div>
+  <section id="rotation-controller" aria-label="Kontrol rotasi karya" aria-hidden="true">
+    <h2>Rotasi 360°</h2>
+    <span></span>
+    <button type="button" data-axis="x" data-step="-15" aria-label="Putar ke atas 15 derajat">↑</button>
+    <span></span>
+    <button type="button" data-axis="y" data-step="-15" aria-label="Putar ke kiri 15 derajat">←</button>
+    <button type="button" data-axis="x" data-step="15" aria-label="Putar ke bawah 15 derajat">↓</button>
+    <button type="button" data-axis="y" data-step="15" aria-label="Putar ke kanan 15 derajat">→</button>
+  </section>
   <div id="game-drawer" aria-label="Menu AR">
     <button id="toggle-drawer" type="button" aria-expanded="false" aria-controls="drawer-reset drawer-toggle-image drawer-toggle-links">MENU</button>
     <div id="drawer-wheel">
@@ -284,7 +452,7 @@
     </nav>
   </div>
   <!-- Ganti imageTargetSrc dengan file .mind Anda -->
-  <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+  <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     
     <a-assets>
       <img id="target-image-0" src="Karya/Artboard 1@300x-100.jpg">
@@ -336,23 +504,32 @@
     </a-entity>
   </a-scene>
 
-  <div id="scanning-overlay" style="display: flex; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; z-index: 999; font-family: sans-serif; font-size: 20px;">
-    Arahkan kamera ke salah satu gambar target AR...
+  <div id="scanning-overlay" aria-live="polite">
+    <section id="scan-guidance">
+      <h1 id="scan-guidance-title">Siap memindai?</h1>
+      <p id="scan-guidance-description">Tekan tombol untuk mengaktifkan kamera dan mulai mencari marker.</p>
+      <button id="retry-camera" class="visible" type="button">Mulai pemindaian</button>
+    </section>
   </div>
 
   <script>
+    async function initializeAR() {
     const scene = document.querySelector('a-scene');
     const cameraStatus = document.getElementById('camera-status');
+    const scanGuidanceTitle = document.getElementById('scan-guidance-title');
+    const scanGuidanceDescription = document.getElementById('scan-guidance-description');
+    const retryCameraButton = document.getElementById('retry-camera');
     const targetIndicator = document.getElementById('target-indicator');
     const targetIndicatorShape = document.getElementById('target-indicator-shape');
     const gestureHint = document.getElementById('gesture-hint');
+    const rotationController = document.getElementById('rotation-controller');
     const gameDrawer = document.getElementById('game-drawer');
     const drawerWheel = document.getElementById('drawer-wheel');
     const drawerButton = document.getElementById('toggle-drawer');
     const resetButton = document.getElementById('drawer-reset');
     const toggleButton = document.getElementById('drawer-toggle-image');
     const linksButton = document.getElementById('drawer-toggle-links');
-    const targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
+    let targets = [];
     let activeTarget = null;
     let activeTargetImage = null;
     let rotatableImage = null;
@@ -360,10 +537,10 @@
     let imageEnabled = true;
     let activePointer = null;
     let previousPointerX = 0;
+    let previousPointerY = 0;
     let gestureHintTimeout = null;
     let animationFrame = null;
     let guideAnimationFrame = null;
-    let guideHideTimeout = null;
     let drawerPointerId = null;
     let lastDrawerPointerAngle = 0;
     let drawerRotation = 0;
@@ -373,8 +550,14 @@
 
     function setCameraStatus(message, type = '') {
       cameraStatus.textContent = message;
-      cameraStatus.classList.remove('error', 'ready');
+      cameraStatus.classList.remove('error', 'ready', 'loading');
       if (type) cameraStatus.classList.add(type);
+    }
+
+    function setScanGuidance(title, description, retry = false) {
+      scanGuidanceTitle.textContent = title;
+      scanGuidanceDescription.textContent = description;
+      retryCameraButton.classList.toggle('visible', retry);
     }
 
     function setTargetIndicator(state) {
@@ -434,7 +617,6 @@
     }
 
     function resetScanGuide() {
-      window.clearTimeout(guideHideTimeout);
       if (guideAnimationFrame !== null) {
         window.cancelAnimationFrame(guideAnimationFrame);
         guideAnimationFrame = null;
@@ -445,41 +627,34 @@
     }
 
     function animateScanGuideToTarget() {
-      window.clearTimeout(guideHideTimeout);
-      const endPoints = getTargetScreenPoints();
-      if (!endPoints) {
-        setTargetIndicator('none');
-        return;
-      }
-
       if (guideAnimationFrame !== null) window.cancelAnimationFrame(guideAnimationFrame);
       const startPoints = getSmallGuidePoints();
       const startTime = performance.now();
       const duration = 420;
 
       function animate(now) {
+        if (!targetVisible) {
+          guideAnimationFrame = null;
+          return;
+        }
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
-        const currentTargetPoints = getTargetScreenPoints() || endPoints;
-        setGuidePoints(startPoints.map((point, index) => ({
-          x: point.x + (currentTargetPoints[index].x - point.x) * eased,
-          y: point.y + (currentTargetPoints[index].y - point.y) * eased
-        })));
-
-        if (elapsed < 950 && targetVisible) {
-          guideAnimationFrame = window.requestAnimationFrame(animate);
-        } else {
-          guideAnimationFrame = null;
+        const currentTargetPoints = getTargetScreenPoints();
+        if (currentTargetPoints) {
+          setGuidePoints(progress < 1
+            ? startPoints.map((point, index) => ({
+              x: point.x + (currentTargetPoints[index].x - point.x) * eased,
+              y: point.y + (currentTargetPoints[index].y - point.y) * eased
+            }))
+            : currentTargetPoints);
         }
+        guideAnimationFrame = window.requestAnimationFrame(animate);
       }
 
       setTargetIndicator('active');
       targetIndicator.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
       guideAnimationFrame = window.requestAnimationFrame(animate);
-      guideHideTimeout = window.setTimeout(() => {
-        if (targetVisible) setTargetIndicator('none');
-      }, 950);
     }
 
     function updateDrawerWheel() {
@@ -508,6 +683,8 @@
     function updateImageVisibility() {
       rotatableImage.object3D.visible = targetVisible && imageEnabled;
       gameDrawer.classList.toggle('visible', targetVisible);
+      rotationController.classList.toggle('visible', targetVisible && imageEnabled);
+      rotationController.setAttribute('aria-hidden', String(!targetVisible || !imageEnabled));
       toggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
     }
 
@@ -531,8 +708,8 @@
 
       const duration = 450;
       const startTime = performance.now();
-      const startZ = 0.4;
-      const endZ = 0.65;
+      const endZ = Number(rotatableImage.dataset.baseZ || 0.65);
+      const startZ = endZ - 0.25;
       rotatableImage.object3D.position.z = startZ;
       rotatableImage.object3D.scale.setScalar(0.82);
 
@@ -557,59 +734,91 @@
       return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
     }
 
-    async function detectCamera() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraStatus('Browser Anda tidak mendukung kamera.', 'error');
-        return;
+    function checkCameraSupport() {
+      if (!window.isSecureContext) {
+        setCameraStatus('Kamera memerlukan HTTPS atau localhost.', 'error');
+        setScanGuidance('Koneksi belum aman', 'Buka aplikasi melalui HTTPS atau http://localhost untuk menggunakan kamera.');
+        retryCameraButton.classList.remove('visible');
+        return false;
       }
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
-          audio: false
-        });
-
-        setCameraStatus('Kamera aktif. Arahkan ke target AR.', 'ready');
-        setTargetIndicator('inactive');
-        stream.getTracks().forEach(track => track.stop());
-      } catch (error) {
-        setCameraStatus('Kamera tidak bisa diakses. Izinkan akses kamera di browser.', 'error');
-        setTargetIndicator('none');
-        console.error('Camera permission failed:', error);
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraStatus('Browser ini tidak mendukung akses kamera.', 'error');
+        setScanGuidance('Kamera tidak didukung', 'Buka halaman ini menggunakan browser modern yang mendukung kamera.');
+        retryCameraButton.classList.remove('visible');
+        return false;
       }
+      return true;
+    }
+
+    function getCameraErrorMessage(error) {
+      const detail = error?.detail?.error || error?.error || error;
+      const name = detail?.name || detail?.message || detail;
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        return {
+          status: 'Izin kamera ditolak. Izinkan akses kamera untuk situs ini.',
+          title: 'Izin kamera diperlukan',
+          description: 'Izinkan penggunaan kamera pada pengaturan situs, lalu coba lagi.'
+        };
+      }
+      if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        return {
+          status: 'Kamera tidak ditemukan pada perangkat ini.',
+          title: 'Kamera tidak ditemukan',
+          description: 'Pastikan perangkat memiliki kamera dan tidak sedang dinonaktifkan.'
+        };
+      }
+      if (name === 'NotReadableError' || name === 'TrackStartError') {
+        return {
+          status: 'Kamera sedang digunakan aplikasi lain.',
+          title: 'Kamera sedang digunakan',
+          description: 'Tutup aplikasi lain yang memakai kamera, lalu coba lagi.'
+        };
+      }
+      if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+        return {
+          status: 'Kamera tidak mendukung pengaturan yang diminta.',
+          title: 'Kamera tidak cocok',
+          description: 'Coba gunakan kamera atau perangkat lain.'
+        };
+      }
+      return {
+        status: 'AR gagal dimulai. Periksa kamera, izin situs, dan file marker.',
+        title: 'Kamera AR gagal dimulai',
+        description: 'Pastikan kamera tersedia, izin diberikan, dan file targets.mind dapat dimuat.'
+      };
     }
 
     function setupRotationControls() {
       if (setupRotationControls.initialized) return;
       setupRotationControls.initialized = true;
       const canvas = scene.canvas;
-      const raycaster = new THREE.Raycaster();
-      const pointer = new THREE.Vector2();
 
       canvas.style.touchAction = 'none';
       if (canvas.parentElement) canvas.parentElement.style.touchAction = 'none';
 
       document.addEventListener('pointerdown', event => {
         if (!targetVisible || !imageEnabled ||
-            (event.target instanceof Element && event.target.closest('#game-drawer'))) return;
-
-        const bounds = canvas.getBoundingClientRect();
-        pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-        pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
-        scene.object3D.updateMatrixWorld(true);
-        raycaster.setFromCamera(pointer, scene.camera);
-
-        if (raycaster.intersectObject(rotatableImage.object3D, true).length === 0) return;
+            (event.target instanceof Element && event.target.closest('#game-drawer, #rotation-controller'))) return;
+        if (!(event.target instanceof Node) || !canvas.contains(event.target)) return;
 
         activePointers.set(event.pointerId, {
           x: event.clientX,
           y: event.clientY,
           type: event.pointerType
         });
+        if (canvas.setPointerCapture && event.pointerId >= 0) {
+          try {
+            canvas.setPointerCapture(event.pointerId);
+          } catch (error) {
+            console.warn('Pointer capture tidak tersedia untuk gesture AR:', error);
+          }
+        }
+        event.preventDefault();
 
         if (activePointers.size === 1) {
           activePointer = event.pointerId;
           previousPointerX = event.clientX;
+          previousPointerY = event.clientY;
         } else if (activePointers.size === 2 && event.pointerType === 'touch') {
           activePointer = null;
           pinchStartDistance = getPointerDistance();
@@ -632,8 +841,11 @@
           rotatableImage.object3D.scale.setScalar(clampedScale);
         } else if (event.pointerId === activePointer) {
           const deltaX = event.clientX - previousPointerX;
+          const deltaY = event.clientY - previousPointerY;
           rotatableImage.object3D.rotation.y += deltaX * 0.01;
+          rotatableImage.object3D.rotation.x += deltaY * 0.01;
           previousPointerX = event.clientX;
+          previousPointerY = event.clientY;
         }
         event.preventDefault();
       });
@@ -647,6 +859,7 @@
           if (!remaining.done) {
             activePointer = remaining.value[0];
             previousPointerX = remaining.value[1].x;
+            previousPointerY = remaining.value[1].y;
           }
         }
       };
@@ -657,13 +870,25 @@
     scene.addEventListener("loaded", setupRotationControls, { once: true });
     if (scene.hasLoaded) setupRotationControls();
 
-    scene.addEventListener("ready", (event) => {
+    scene.addEventListener("arReady", () => {
       console.log("Scene AR siap!");
       resetScanGuide();
-      detectCamera();
+      setCameraStatus('Kamera aktif. Arahkan ke marker.', 'ready');
+      setScanGuidance('Arahkan kamera ke marker', 'Dekatkan gambar target ke dalam bingkai dan pastikan pencahayaan cukup.');
+      retryCameraButton.classList.remove('visible');
+      retryCameraButton.textContent = 'Mulai pemindaian';
+    });
+    scene.addEventListener("arError", event => {
+      const message = getCameraErrorMessage(event);
+      setCameraStatus(message.status, 'error');
+      setScanGuidance(message.title, message.description, true);
+      retryCameraButton.textContent = 'Coba kamera lagi';
+      setTargetIndicator('none');
+      console.error('MindAR startup error:', event.detail || event);
     });
 
     window.addEventListener('resize', () => {
+      targetIndicator.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
       if (!targetVisible) resetScanGuide();
     });
 
@@ -681,6 +906,18 @@
       rotatableImage.object3D.scale.setScalar(1);
       closeDrawer();
       showGestureHint('Rotasi dan ukuran gambar dikembalikan ke awal.');
+    });
+
+    rotationController.addEventListener('click', event => {
+      const button = event.target instanceof Element
+        ? event.target.closest('button[data-axis][data-step]')
+        : null;
+      if (!button || !rotatableImage || !targetVisible || !imageEnabled) return;
+      const axis = button.dataset.axis;
+      if (axis !== 'x' && axis !== 'y') return;
+      const step = Number(button.dataset.step);
+      if (!Number.isFinite(step)) return;
+      rotatableImage.object3D.rotation[axis] += step * Math.PI / 180;
     });
 
     toggleButton.addEventListener('click', () => {
@@ -727,6 +964,7 @@
     drawerWheel.addEventListener('pointerup', stopDrawerRotation);
     drawerWheel.addEventListener('pointercancel', stopDrawerRotation);
 
+    targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
     targets.forEach(target => {
       target.addEventListener("targetFound", () => {
         console.log(`Target gambar ${target.id} ditemukan!`);
@@ -735,12 +973,15 @@
         rotatableImage = target.querySelector('.rotatable-image');
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'none';
+        const video = target.querySelector('video');
+        if (video) video.play().catch(error => console.warn('Autoplay video AR diblokir:', error));
         targetVisible = true;
         updateImageVisibility();
         if (imageEnabled) animateImageIn();
         closeDrawer();
         setCameraStatus('Target berhasil dipindai.', 'ready');
-        showGestureHint('Usap gambar untuk memutar · cubit untuk zoom · buka MENU di kiri dan putar lacinya.');
+        setScanGuidance('Marker terdeteksi', 'Pertahankan marker dalam pandangan kamera.');
+        showGestureHint('Usap gambar ke segala arah untuk rotasi 360° · cubit untuk zoom · gunakan tombol kontrol.');
         animateScanGuideToTarget();
       });
 
@@ -749,6 +990,8 @@
         console.log(`Target gambar ${target.id} hilang.`);
         const overlay = document.querySelector('#scanning-overlay');
         if (overlay) overlay.style.display = 'flex';
+        const video = target.querySelector('video');
+        if (video) video.pause();
         targetVisible = false;
         activePointer = null;
         activePointers.clear();
@@ -761,7 +1004,8 @@
         }
         closeDrawer();
         updateImageVisibility();
-        setCameraStatus('Target hilang. Arahkan kamera ke salah satu gambar target lagi.', 'ready');
+        setCameraStatus('Marker hilang. Arahkan kamera ke marker lagi.', 'ready');
+        setScanGuidance('Cari marker', 'Geser kamera perlahan dan jaga marker tetap terang serta terlihat utuh.');
         activeTarget = null;
         activeTargetImage = null;
         rotatableImage = null;
@@ -771,6 +1015,132 @@
 
     updateDrawerWheel();
     resetScanGuide();
+    retryCameraButton.addEventListener('click', startAR);
+
+    async function startAR() {
+      if (!checkCameraSupport()) return;
+      retryCameraButton.disabled = true;
+      retryCameraButton.textContent = 'Menyalakan kamera...';
+      setCameraStatus('Meminta akses kamera dan memulai AR...', 'loading');
+      setScanGuidance('Menyiapkan kamera', 'Jika diminta, izinkan akses kamera untuk memulai pemindaian.', true);
+      try {
+        await scene.systems['mindar-image-system'].start();
+      } catch (error) {
+        const message = getCameraErrorMessage(error);
+        setCameraStatus(message.status, 'error');
+        setScanGuidance(message.title, message.description, true);
+        retryCameraButton.textContent = 'Coba kamera lagi';
+        setTargetIndicator('none');
+        console.error('MindAR failed to start:', error);
+      } finally {
+        retryCameraButton.disabled = false;
+        if (retryCameraButton.classList.contains('visible')) {
+          retryCameraButton.textContent = 'Coba kamera lagi';
+        }
+      }
+    }
+
+    if (!checkCameraSupport()) {
+      setTargetIndicator('none');
+      return;
+    }
+    setCameraStatus('Kamera siap. Tekan tombol untuk memulai pemindaian.');
+    setScanGuidance('Siap memindai?', 'Tekan tombol untuk mengaktifkan kamera dan mulai mencari marker.', true);
+    }
+  </script>
+  <script type="module">
+    import { getMindFile, getTargets } from './studio-storage.js';
+
+    const scene = document.querySelector('a-scene');
+    const syncStatus = document.getElementById('studio-sync-status');
+
+    function addTarget(record, markerUrl, contentUrl) {
+      const assets = scene.querySelector('a-assets');
+      const markerId = `target-image-${record.target_index}`;
+      const contentId = `ar-content-${record.target_index}`;
+      const marker = document.createElement('img');
+      marker.id = markerId;
+      marker.src = markerUrl;
+      assets.append(marker);
+
+      const content = document.createElement(record.content_type === 'video' ? 'video' : 'img');
+      content.id = contentId;
+      content.src = contentUrl;
+      if (record.content_type === 'video') {
+        content.loop = true;
+        content.muted = true;
+        content.playsInline = true;
+      }
+      assets.append(content);
+
+      const target = document.createElement('a-entity');
+      target.id = `image-target-${record.target_index}`;
+      target.setAttribute('mindar-image-target', `targetIndex: ${record.target_index}`);
+      target.dataset.imageId = markerId;
+      const wrapper = document.createElement('a-entity');
+      wrapper.classList.add('rotatable-image');
+      wrapper.dataset.baseZ = String(record.position_z);
+      wrapper.setAttribute('position', `${record.position_x} ${record.position_y} ${record.position_z}`);
+
+      [false, true].forEach(backSide => {
+        const plane = document.createElement('a-plane');
+        plane.setAttribute('src', `#${contentId}`);
+        plane.setAttribute('width', String(record.width));
+        plane.setAttribute('height', String(record.height));
+        plane.setAttribute('material', 'shader: flat');
+        if (backSide) {
+          plane.setAttribute('rotation', '0 180 0');
+          plane.setAttribute('position', '0 0 -0.002');
+        }
+        wrapper.append(plane);
+      });
+      target.append(wrapper);
+      scene.append(target);
+    }
+
+    async function loadStudioTargets() {
+      const records = (await getTargets())
+        .filter(record => record.enabled)
+        .sort((left, right) => left.target_index - right.target_index);
+      if (!records.length) {
+        syncStatus.textContent = 'Studio lokal kosong; menggunakan katalog bawaan.';
+        return;
+      }
+
+      const indices = new Set();
+      records.forEach(record => {
+        if (!Number.isInteger(record.target_index) || record.target_index < 0 || indices.has(record.target_index)) {
+          throw new Error('Index target Studio tidak valid atau duplikat.');
+        }
+        if (!['image', 'video'].includes(record.content_type) || !record.marker_blob || !record.content_blob) {
+          throw new Error(`Data karya "${record.title}" tidak lengkap.`);
+        }
+        indices.add(record.target_index);
+      });
+
+      const mindFile = await getMindFile();
+      scene.querySelectorAll('[mindar-image-target]').forEach(target => target.remove());
+      const assets = scene.querySelector('a-assets');
+      assets.querySelectorAll('img, video').forEach(asset => asset.remove());
+      scene.setAttribute(
+        'mindar-image',
+        `imageTargetSrc: ${mindFile?.file ? URL.createObjectURL(mindFile.file) : 'targets.mind'}; autoStart: false; uiScanning: #scanning-overlay;`
+      );
+      records.forEach(record => addTarget(
+        record,
+        URL.createObjectURL(record.marker_blob),
+        URL.createObjectURL(record.content_blob)
+      ));
+      syncStatus.textContent = `Studio lokal · ${records.length} karya di browser ini`;
+    }
+
+    try {
+      await loadStudioTargets();
+    } catch (error) {
+      syncStatus.textContent = 'Data Studio lokal gagal dimuat. Periksa penyimpanan browser.';
+      console.error('Gagal memuat konten Studio:', error);
+    }
+    await window.initializeAR();
   </script>
 
 </body>

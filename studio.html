@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09111d">
+  <title>Studio Editor Admin | AR BM3 DEKAVE</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #09111d;
+      color: #edf4ff;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 15% 0%, #142a45 0, #09111d 48rem); }
+    button, input, select { font: inherit; }
+    button, .button-link {
+      border: 1px solid #34506f;
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #edf4ff;
+      background: #14253a;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    button:hover, .button-link:hover { border-color: #52c8d8; background: #19334c; }
+    button.primary { border-color: #31b8c9; background: #087f91; font-weight: 700; }
+    button.danger { color: #ffb8b8; border-color: #68383f; background: #351e28; }
+    button:disabled { opacity: .55; cursor: wait; }
+    input, select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #30445d;
+      border-radius: 9px;
+      background: #0b1726;
+      color: #edf4ff;
+    }
+    input:focus, select:focus { outline: 2px solid #36b8ca; outline-offset: 1px; }
+    label { display: grid; gap: 7px; color: #adbed3; font-size: 13px; }
+    h1, h2, p { margin-top: 0; }
+    h1 { margin-bottom: 6px; font-size: clamp(25px, 4vw, 36px); letter-spacing: -.04em; }
+    h2 { margin-bottom: 16px; font-size: 19px; }
+    .shell { width: min(1160px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 60px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 28px; }
+    .brand { color: #6cdbdf; font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .subhead, .muted { color: #92a6bd; }
+    .panel { padding: 24px; border: 1px solid #233a53; border-radius: 16px; background: rgba(14, 27, 43, .92); box-shadow: 0 18px 55px #0002; }
+    .login-panel { max-width: 440px; margin: 44px auto; }
+    .stack { display: grid; gap: 16px; }
+    .toolbar, .form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .toolbar { justify-content: space-between; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 18px; align-items: start; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .form-grid .wide { grid-column: 1 / -1; }
+    .field-note { color: #788da5; font-size: 12px; line-height: 1.5; }
+    .status { min-height: 20px; color: #a8bdcf; font-size: 13px; line-height: 1.5; }
+    .status.error { color: #ff9a9a; }
+    .status.success { color: #72e5b1; }
+    .list { display: grid; gap: 10px; margin-top: 16px; }
+    .target-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 13px; padding: 11px; border: 1px solid #263d55; border-radius: 12px; background: #0b1726; }
+    .target-row img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; background: #18283a; }
+    .target-title { margin-bottom: 4px; font-weight: 700; }
+    .target-meta { color: #92a6bd; font-size: 12px; }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+    .row-actions button { padding: 8px 10px; font-size: 12px; }
+    .hidden { display: none !important; }
+    @media (max-width: 780px) {
+      .workspace { grid-template-columns: 1fr; }
+      .shell { width: min(100% - 22px, 560px); padding-top: 22px; }
+      .panel { padding: 18px; }
+    }
+    @media (max-width: 460px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .wide { grid-column: auto; }
+      .target-row { grid-template-columns: 52px minmax(0, 1fr); }
+      .target-row img { width: 52px; height: 52px; }
+      .row-actions { grid-column: 1 / -1; }
+      .topbar { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="brand">AR BM3 DEKAVE · Studio</div>
+        <h1>Studio Editor</h1>
+        <p class="subhead">Kelola marker dan konten yang tampil di pengalaman WebAR.</p>
+      </div>
+      <a class="button-link" href="./index.html">← Kembali ke AR</a>
+    </header>
+
+    <p class="panel field-note" style="margin-bottom: 18px">Mode lokal tanpa login: data dan file hanya tersimpan di browser/perangkat ini. Belum disinkronkan atau dipublikasikan ke pengunjung lain.</p>
+    <section id="studio-panel">
+      <div class="workspace">
+        <section class="panel">
+          <div class="toolbar">
+            <h2>Daftar karya & marker</h2>
+            <button id="new-target-button" type="button">+ Karya baru</button>
+          </div>
+          <p class="field-note">Nomor index harus sama dengan urutan gambar dalam file targets.mind.</p>
+          <div id="target-list" class="list"></div>
+          <div id="list-status" class="status" role="status" aria-live="polite"></div>
+        </section>
+
+        <div class="stack">
+          <section class="panel">
+            <h2 id="form-title">Tambah karya AR</h2>
+            <form id="target-form" class="stack">
+              <input id="record-id" type="hidden">
+              <div class="form-grid">
+                <label class="wide">Nama karya<input id="title" maxlength="120" required></label>
+                <label>Index marker<input id="target-index" type="number" min="0" step="1" required></label>
+                <label>Jenis konten
+                  <select id="content-type"><option value="image">Gambar</option><option value="video">Video</option></select>
+                </label>
+                <label>Lebar bidang<input id="width" type="number" min="0.01" max="10" step="0.01" value="1" required></label>
+                <label>Tinggi bidang<input id="height" type="number" min="0.01" max="10" step="0.01" value="1" required></label>
+                <label>Posisi X<input id="position-x" type="number" step="0.01" value="0" required></label>
+                <label>Posisi Y<input id="position-y" type="number" step="0.01" value="0" required></label>
+                <label>Jarak Z<input id="position-z" type="number" step="0.01" value="0.65" required></label>
+                <label class="wide">Gambar marker cetak<input id="marker-file" type="file" accept="image/*"></label>
+                <label class="wide">Konten yang tampil di AR<input id="content-file" type="file" accept="image/*,video/*"></label>
+                <label class="wide">Tampilkan di AR
+                  <select id="enabled"><option value="true">Ya</option><option value="false">Tidak</option></select>
+                </label>
+              </div>
+              <p class="field-note">Untuk karya baru atau perubahan gambar marker, unggah juga file targets.mind terbaru di panel bawah. File tersebut harus dikompilasi dengan urutan index yang sama.</p>
+              <div class="form-actions">
+                <button class="primary" type="submit">Simpan karya</button>
+                <button id="cancel-edit-button" type="button">Batal</button>
+              </div>
+              <div id="form-status" class="status" role="status" aria-live="polite"></div>
+            </form>
+          </section>
+
+          <section class="panel">
+            <h2>File tracking MindAR</h2>
+            <p class="field-note">Unggah hasil kompilasi <code>.mind</code> yang cocok dengan daftar marker. File tersimpan hanya di browser ini.</p>
+            <form id="mind-form" class="stack">
+              <label>File targets.mind<input id="mind-file" type="file" accept=".mind,application/octet-stream" required></label>
+              <button class="primary" type="submit">Perbarui file marker</button>
+              <div id="mind-status" class="status" role="status" aria-live="polite"></div>
+            </form>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./studio.js"></script>
+</body>
+</html>
