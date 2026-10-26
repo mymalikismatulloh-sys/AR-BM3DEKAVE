@@ -170,7 +170,7 @@
       z-index: 1250;
       display: none;
       grid-template-columns: repeat(3, 44px);
-      grid-template-rows: auto repeat(2, 44px);
+      grid-template-rows: auto repeat(2, 44px) auto;
       align-items: center;
       justify-items: center;
       gap: 6px;
@@ -217,6 +217,22 @@
       color: #9fe8ff;
       font-size: 11px;
       font-weight: 700;
+    }
+
+    #parallax-toggle {
+      grid-column: 1 / -1;
+      width: auto !important;
+      height: auto !important;
+      min-height: 38px;
+      padding: 7px 10px !important;
+      font-size: 12px !important;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #parallax-toggle[aria-pressed="true"] {
+      border-color: #73e6bb !important;
+      background: rgba(0, 145, 105, 0.62) !important;
     }
 
     #game-drawer {
@@ -438,6 +454,7 @@
     <button type="button" data-axis="y" data-step="-15" aria-label="Putar ke kiri 15 derajat">←</button>
     <button type="button" data-axis="x" data-step="15" aria-label="Putar ke bawah 15 derajat">↓</button>
     <button type="button" data-axis="y" data-step="15" aria-label="Putar ke kanan 15 derajat">→</button>
+    <button id="parallax-toggle" type="button" aria-pressed="false">Aktifkan Parallax</button>
   </section>
   <div id="game-drawer" aria-label="Menu AR">
     <button id="toggle-drawer" type="button" aria-expanded="false" aria-controls="drawer-reset drawer-toggle-image drawer-toggle-links">MENU</button>
@@ -459,6 +476,9 @@
       <img id="target-image-1" src="Karya/Bilqis X DKV 01.png">
       <img id="target-image-2" src="Karya/Rizka Afrilia Azzahra XI DKV 2 .png">
       <img id="target-image-3" src="Karya/maaf salah masukin.jpg">
+      <img id="parallax-background" src="Parallax File/parallax_layers_af82139e/03_background.png">
+      <img id="parallax-midground" src="Parallax File/parallax_layers_af82139e/02_midground.png">
+      <img id="parallax-foreground" src="Parallax File/parallax_layers_af82139e/01_foreground.png">
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -523,6 +543,7 @@
     const targetIndicatorShape = document.getElementById('target-indicator-shape');
     const gestureHint = document.getElementById('gesture-hint');
     const rotationController = document.getElementById('rotation-controller');
+    const parallaxToggle = document.getElementById('parallax-toggle');
     const gameDrawer = document.getElementById('game-drawer');
     const drawerWheel = document.getElementById('drawer-wheel');
     const drawerButton = document.getElementById('toggle-drawer');
@@ -535,6 +556,10 @@
     let rotatableImage = null;
     let targetVisible = false;
     let imageEnabled = true;
+    let parallaxEnabled = false;
+    let activeParallaxRoot = null;
+    let activeParallaxLayers = [];
+    let parallaxPermissionRequested = false;
     let activePointer = null;
     let previousPointerX = 0;
     let previousPointerY = 0;
@@ -698,10 +723,78 @@
 
     function updateImageVisibility() {
       rotatableImage.object3D.visible = targetVisible && imageEnabled;
+      const originalPlanes = rotatableImage.querySelectorAll('.ar-content-plane');
+      originalPlanes.forEach(plane => {
+        plane.object3D.visible = !parallaxEnabled;
+      });
+      if (activeParallaxRoot) activeParallaxRoot.object3D.visible = parallaxEnabled;
       gameDrawer.classList.toggle('visible', targetVisible);
       rotationController.classList.toggle('visible', targetVisible && imageEnabled);
       rotationController.setAttribute('aria-hidden', String(!targetVisible || !imageEnabled));
       toggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
+    }
+
+    function setParallaxOffset(horizontal, vertical) {
+      if (!parallaxEnabled) return;
+      const maxOffset = 0.055;
+      activeParallaxLayers.forEach(layer => {
+        const depth = Number(layer.dataset.parallaxDepth);
+        layer.object3D.position.x = horizontal * maxOffset * depth;
+        layer.object3D.position.y = -vertical * maxOffset * depth;
+      });
+    }
+
+    function handleDeviceOrientation(event) {
+      if (typeof event.gamma !== 'number' || typeof event.beta !== 'number') return;
+      setParallaxOffset(
+        Math.max(-1, Math.min(1, event.gamma / 35)),
+        Math.max(-1, Math.min(1, (event.beta - 45) / 35))
+      );
+    }
+
+    async function toggleParallax() {
+      if (!targetVisible || !imageEnabled) return;
+      const enabling = !parallaxEnabled;
+      if (enabling) {
+        const missingAssets = ['parallax-background', 'parallax-midground', 'parallax-foreground']
+          .filter(id => {
+            const image = document.getElementById(id);
+            return !image || !image.complete || image.naturalWidth === 0;
+          });
+        if (missingAssets.length) {
+          console.error('Aset Parallax gagal dimuat:', missingAssets);
+          showGestureHint('Layer Parallax gagal dimuat. Periksa file di folder Parallax File.');
+          return;
+        }
+      }
+      if (enabling && !parallaxPermissionRequested) {
+        parallaxPermissionRequested = true;
+        const orientation = window.DeviceOrientationEvent;
+        if (typeof orientation?.requestPermission === 'function') {
+          try {
+            const permission = await orientation.requestPermission();
+            if (permission !== 'granted') {
+              showGestureHint('Izin sensor gerak ditolak. Parallax dapat dicoba dengan menggerakkan pointer.');
+            }
+          } catch (error) {
+            console.warn('Izin sensor gerak tidak tersedia:', error);
+            showGestureHint('Sensor gerak tidak tersedia. Parallax dapat dicoba dengan menggerakkan pointer.');
+          }
+        }
+      }
+      parallaxEnabled = enabling;
+      parallaxToggle.setAttribute('aria-pressed', String(parallaxEnabled));
+      parallaxToggle.textContent = parallaxEnabled ? 'Matikan Parallax' : 'Aktifkan Parallax';
+      if (parallaxEnabled) {
+        window.addEventListener('deviceorientation', handleDeviceOrientation);
+        setParallaxOffset(0, 0);
+        showGestureHint('Parallax aktif. Miringkan HP perlahan untuk menggerakkan layer.');
+      } else {
+        window.removeEventListener('deviceorientation', handleDeviceOrientation);
+        setParallaxOffset(0, 0);
+        showGestureHint('Parallax dimatikan.');
+      }
+      updateImageVisibility();
     }
 
     function closeDrawer() {
@@ -866,6 +959,14 @@
         event.preventDefault();
       });
 
+      canvas.addEventListener('pointermove', event => {
+        if (!parallaxEnabled || event.pointerType !== 'mouse' || !targetVisible) return;
+        const bounds = canvas.getBoundingClientRect();
+        const horizontal = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
+        const vertical = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2;
+        setParallaxOffset(horizontal, vertical);
+      });
+
       const stopGesture = event => {
         activePointers.delete(event.pointerId);
         if (event.pointerId === activePointer) activePointer = null;
@@ -928,13 +1029,15 @@
       const button = event.target instanceof Element
         ? event.target.closest('button[data-axis][data-step]')
         : null;
-      if (!button || !rotatableImage || !targetVisible || !imageEnabled) return;
+      if (!button) return;
+      if (!rotatableImage || !targetVisible || !imageEnabled) return;
       const axis = button.dataset.axis;
       if (axis !== 'x' && axis !== 'y') return;
       const step = Number(button.dataset.step);
       if (!Number.isFinite(step)) return;
       rotatableImage.object3D.rotation[axis] += step * Math.PI / 180;
     });
+    parallaxToggle.addEventListener('click', toggleParallax);
 
     toggleButton.addEventListener('click', () => {
       imageEnabled = !imageEnabled;
@@ -982,11 +1085,40 @@
 
     targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
     targets.forEach(target => {
+      const content = target.querySelector('.rotatable-image');
+      if (!content) {
+        console.error(`Konten AR untuk target "${target.id}" tidak ditemukan.`);
+        return;
+      }
+      content.querySelectorAll('a-plane').forEach(plane => plane.classList.add('ar-content-plane'));
+      const parallaxLayers = [
+        { asset: 'parallax-background', depth: 0.12 },
+        { asset: 'parallax-midground', depth: 0.32 },
+        { asset: 'parallax-foreground', depth: 0.62 }
+      ];
+      const parallaxRoot = document.createElement('a-entity');
+      parallaxRoot.classList.add('parallax-layers');
+      parallaxRoot.object3D.visible = false;
+      parallaxLayers.forEach(({ asset, depth }) => {
+        const plane = document.createElement('a-plane');
+        plane.classList.add('parallax-layer');
+        plane.dataset.parallaxDepth = String(depth);
+        plane.setAttribute('src', `#${asset}`);
+        plane.setAttribute('width', '1');
+        plane.setAttribute('height', String(922 / 783));
+        plane.setAttribute('material', 'shader: flat; transparent: true; alphaTest: 0.05; side: double');
+        plane.setAttribute('position', `0 0 ${depth * 0.012}`);
+        parallaxRoot.append(plane);
+      });
+      content.append(parallaxRoot);
+
       target.addEventListener("targetFound", () => {
         console.log(`Target gambar ${target.id} ditemukan!`);
         activeTarget = target;
         activeTargetImage = document.getElementById(target.dataset.imageId);
-        rotatableImage = target.querySelector('.rotatable-image');
+        rotatableImage = content;
+        activeParallaxRoot = parallaxRoot;
+        activeParallaxLayers = Array.from(parallaxRoot.querySelectorAll('.parallax-layer'));
         if (!rotatableImage) {
           console.error(`Konten AR untuk target "${target.id}" tidak ditemukan.`);
           setCameraStatus('Konten karya AR gagal dimuat.', 'error');
@@ -1014,6 +1146,14 @@
         const video = target.querySelector('video');
         if (video) video.pause();
         targetVisible = false;
+        if (parallaxEnabled) {
+          window.removeEventListener('deviceorientation', handleDeviceOrientation);
+          parallaxEnabled = false;
+          parallaxToggle.setAttribute('aria-pressed', 'false');
+          parallaxToggle.textContent = 'Aktifkan Parallax';
+        }
+        activeParallaxRoot = null;
+        activeParallaxLayers = [];
         activePointer = null;
         activePointers.clear();
         drawerPointerId = null;
@@ -1142,7 +1282,7 @@
       const mindFile = await getMindFile();
       scene.querySelectorAll('[mindar-image-target]').forEach(target => target.remove());
       const assets = scene.querySelector('a-assets');
-      assets.querySelectorAll('img, video').forEach(asset => asset.remove());
+      assets.querySelectorAll('[id^="target-image-"], [id^="ar-content-"]').forEach(asset => asset.remove());
       scene.setAttribute(
         'mindar-image',
         `imageTargetSrc: ${mindFile?.file ? URL.createObjectURL(mindFile.file) : 'targets.mind'}; autoStart: false; uiScanning: #scanning-overlay;`

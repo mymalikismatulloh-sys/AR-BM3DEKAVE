@@ -126,6 +126,11 @@ File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar 
     - **Website Sekolah:** [smkbinamandirimultimedia.sch.id](https://smkbinamandirimultimedia.sch.id/)
     - **Instagram:** [@smkbm_3](https://www.instagram.com/smkbm_3/)
 
+### 6. 🌄 Mode Parallax 2.5D
+- Saat marker terdeteksi, tekan **Aktifkan Parallax** di kontrol rotasi untuk mengganti sementara gambar utama dengan komposisi tiga layer PNG dari folder `Parallax File`.
+- Miringkan HP perlahan untuk menggerakkan layer dengan kedalaman berbeda. Pada desktop, gerakkan pointer di atas kanvas AR.
+- Jika browser iPhone meminta izin sensor gerak, izinkan setelah menekan tombol Parallax. Mode dapat dimatikan kapan saja; rotasi dan zoom tetap bekerja pada komposisi layer.
+
 ---
 
 ## 🧰 Studio Editor tanpa login (mode lokal)
