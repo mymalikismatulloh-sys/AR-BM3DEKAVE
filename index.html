@@ -170,7 +170,7 @@
       z-index: 1250;
       display: none;
       grid-template-columns: repeat(3, 44px);
-      grid-template-rows: auto repeat(2, 44px) auto;
+      grid-template-rows: auto auto repeat(2, 44px) auto;
       align-items: center;
       justify-items: center;
       gap: 6px;
@@ -228,6 +228,42 @@
       font-size: 12px !important;
       font-weight: 700;
       white-space: nowrap;
+    }
+
+    #pose-mode-controls {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 5px;
+      width: 100%;
+    }
+
+    #pose-mode-controls h3 {
+      margin: 0;
+      color: #d7f4ff;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    #pose-mode-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    #pose-mode-buttons button {
+      width: auto;
+      height: 34px;
+      padding: 0 3px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    #pose-mode-buttons button[aria-pressed="true"] {
+      border-color: #73e6bb;
+      background: rgba(0, 145, 105, 0.62);
+      box-shadow: 0 0 10px rgba(65, 230, 177, 0.3);
     }
 
     #parallax-toggle[aria-pressed="true"] {
@@ -447,14 +483,22 @@
   </svg>
   <div id="gesture-hint" role="status" aria-live="polite"></div>
   <section id="rotation-controller" aria-label="Kontrol rotasi karya" aria-hidden="true">
-    <h2>Rotasi 360°</h2>
+    <h2>Sudut & Rotasi</h2>
+    <div id="pose-mode-controls">
+      <h3>Mode sudut</h3>
+      <div id="pose-mode-buttons" role="group" aria-label="Pilih mode sudut karya">
+        <button type="button" data-pose-mode="attached" aria-pressed="true">Tempel</button>
+        <button type="button" data-pose-mode="angle" aria-pressed="false">45°</button>
+        <button type="button" data-pose-mode="free" aria-pressed="false">Bebas</button>
+      </div>
+    </div>
     <span></span>
     <button type="button" data-axis="x" data-step="-15" aria-label="Putar ke atas 15 derajat">↑</button>
     <span></span>
     <button type="button" data-axis="y" data-step="-15" aria-label="Putar ke kiri 15 derajat">←</button>
     <button type="button" data-axis="x" data-step="15" aria-label="Putar ke bawah 15 derajat">↓</button>
     <button type="button" data-axis="y" data-step="15" aria-label="Putar ke kanan 15 derajat">→</button>
-    <button id="parallax-toggle" type="button" aria-pressed="false">Aktifkan Parallax</button>
+    <button id="parallax-toggle" type="button" aria-pressed="false">Visual: Normal</button>
   </section>
   <div id="game-drawer" aria-label="Menu AR">
     <button id="toggle-drawer" type="button" aria-expanded="false" aria-controls="drawer-reset drawer-toggle-image drawer-toggle-links">MENU</button>
@@ -544,6 +588,7 @@
     const gestureHint = document.getElementById('gesture-hint');
     const rotationController = document.getElementById('rotation-controller');
     const parallaxToggle = document.getElementById('parallax-toggle');
+    const poseModeButtons = document.getElementById('pose-mode-buttons');
     const gameDrawer = document.getElementById('game-drawer');
     const drawerWheel = document.getElementById('drawer-wheel');
     const drawerButton = document.getElementById('toggle-drawer');
@@ -556,6 +601,9 @@
     let rotatableImage = null;
     let targetVisible = false;
     let imageEnabled = true;
+    let poseMode = 'attached';
+    let configuredPoseZ = 0.65;
+    let poseTransitionFrame = null;
     let parallaxEnabled = false;
     let activeParallaxRoot = null;
     let activeParallaxLayers = [];
@@ -579,6 +627,11 @@
     let pinchStartScale = 1;
     const SCAN_GUIDE_VISIBLE_MS = 1200;
     const PARALLAX_MAX_OFFSET = 0.1;
+    const POSE_MODES = {
+      attached: { label: 'Tempel', z: 0.05, rotationX: 0 },
+      angle: { label: '45°', z: 0.2, rotationX: -Math.PI / 4 },
+      free: { label: 'Bebas', rotationX: 0 }
+    };
 
     function setCameraStatus(message, type = '') {
       cameraStatus.textContent = message;
@@ -739,6 +792,70 @@
       toggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
     }
 
+    function setPoseMode(mode, { animate = true, showHint = true } = {}) {
+      const preset = POSE_MODES[mode];
+      if (!preset || !rotatableImage) return;
+
+      poseMode = mode;
+      const endZ = mode === 'free' ? configuredPoseZ : preset.z;
+      rotatableImage.dataset.baseZ = String(endZ);
+      poseModeButtons.querySelectorAll('[data-pose-mode]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.poseMode === mode));
+      });
+
+      if (poseTransitionFrame !== null) {
+        window.cancelAnimationFrame(poseTransitionFrame);
+        poseTransitionFrame = null;
+      }
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }
+
+      const object = rotatableImage.object3D;
+      if (!animate) {
+        object.position.z = endZ;
+        object.rotation.set(preset.rotationX, 0, 0);
+        return;
+      }
+
+      object.scale.setScalar(1);
+      const startZ = object.position.z;
+      const startRotation = object.rotation.toArray();
+      const endRotation = [preset.rotationX, 0, 0];
+      const startTime = performance.now();
+      const duration = 320;
+
+      function transition(now) {
+        if (!targetVisible || !rotatableImage) {
+          poseTransitionFrame = null;
+          return;
+        }
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        object.position.z = startZ + (endZ - startZ) * eased;
+        object.rotation.set(
+          startRotation[0] + (endRotation[0] - startRotation[0]) * eased,
+          startRotation[1] + (endRotation[1] - startRotation[1]) * eased,
+          startRotation[2] + (endRotation[2] - startRotation[2]) * eased
+        );
+        if (progress < 1) {
+          poseTransitionFrame = window.requestAnimationFrame(transition);
+        } else {
+          poseTransitionFrame = null;
+        }
+      }
+
+      poseTransitionFrame = window.requestAnimationFrame(transition);
+      if (showHint) {
+        showGestureHint(
+          mode === 'free'
+            ? 'Mode Bebas: seret karya atau gunakan tombol rotasi.'
+            : `Mode ${preset.label}: posisi karya disesuaikan.`
+        );
+      }
+    }
+
     function setParallaxOffset(horizontal, vertical) {
       if (!parallaxEnabled) return;
       parallaxInputX = Math.max(-1, Math.min(1, horizontal));
@@ -804,7 +921,7 @@
       }
       parallaxEnabled = enabling;
       parallaxToggle.setAttribute('aria-pressed', String(parallaxEnabled));
-      parallaxToggle.textContent = parallaxEnabled ? 'Matikan Parallax' : 'Aktifkan Parallax';
+      parallaxToggle.textContent = parallaxEnabled ? 'Visual: Parallax' : 'Visual: Normal';
       if (parallaxEnabled) {
         window.addEventListener('deviceorientation', handleDeviceOrientation);
         setParallaxOffset(0, 0);
@@ -850,7 +967,7 @@
       const duration = 450;
       const startTime = performance.now();
       const endZ = Number(rotatableImage.dataset.baseZ || 0.65);
-      const startZ = endZ - 0.25;
+      const startZ = Math.max(0, endZ - 0.25);
       rotatableImage.object3D.position.z = startZ;
       rotatableImage.object3D.scale.setScalar(0.82);
 
@@ -983,6 +1100,7 @@
         } else if (event.pointerId === activePointer) {
           const deltaX = event.clientX - previousPointerX;
           const deltaY = event.clientY - previousPointerY;
+          if (poseMode !== 'free') setPoseMode('free', { animate: false, showHint: false });
           rotatableImage.object3D.rotation.y += deltaX * 0.01;
           rotatableImage.object3D.rotation.x += deltaY * 0.01;
           if (parallaxEnabled) {
@@ -1058,10 +1176,18 @@
     });
 
     resetButton.addEventListener('click', () => {
-      rotatableImage.object3D.rotation.set(0, 0, 0);
       rotatableImage.object3D.scale.setScalar(1);
+      setPoseMode(poseMode, { showHint: false });
       closeDrawer();
-      showGestureHint('Rotasi dan ukuran gambar dikembalikan ke awal.');
+      showGestureHint('Sudut dan ukuran karya dikembalikan ke preset mode.');
+    });
+
+    poseModeButtons.addEventListener('click', event => {
+      const button = event.target instanceof Element
+        ? event.target.closest('button[data-pose-mode]')
+        : null;
+      if (!button || !targetVisible || !imageEnabled) return;
+      setPoseMode(button.dataset.poseMode);
     });
 
     rotationController.addEventListener('click', event => {
@@ -1074,6 +1200,7 @@
       if (axis !== 'x' && axis !== 'y') return;
       const step = Number(button.dataset.step);
       if (!Number.isFinite(step)) return;
+      if (poseMode !== 'free') setPoseMode('free', { animate: false, showHint: false });
       rotatableImage.object3D.rotation[axis] += step * Math.PI / 180;
     });
     parallaxToggle.addEventListener('click', toggleParallax);
@@ -1158,6 +1285,11 @@
         activeTarget = target;
         activeTargetImage = document.getElementById(target.dataset.imageId);
         rotatableImage = content;
+        const configuredZ = rotatableImage.dataset.baseZ;
+        configuredPoseZ = configuredZ !== undefined
+          ? Number(configuredZ)
+          : rotatableImage.object3D.position.z;
+        if (!Number.isFinite(configuredPoseZ)) configuredPoseZ = 0.65;
         activeParallaxRoot = parallaxRoot;
         activeParallaxLayers = Array.from(parallaxRoot.querySelectorAll('.parallax-layer'));
         if (!rotatableImage) {
@@ -1170,12 +1302,13 @@
         const video = target.querySelector('video');
         if (video) video.play().catch(error => console.warn('Autoplay video AR diblokir:', error));
         targetVisible = true;
+        setPoseMode('attached', { animate: false, showHint: false });
         updateImageVisibility();
         if (imageEnabled) animateImageIn();
         closeDrawer();
         setCameraStatus('Target berhasil dipindai.', 'ready');
         setScanGuidance('Marker terdeteksi', 'Pertahankan marker dalam pandangan kamera.');
-        showGestureHint('Usap gambar ke segala arah untuk rotasi 360° · cubit untuk zoom · gunakan tombol kontrol.');
+        showGestureHint('Pilih Tempel, 45°, atau Bebas. Mode Bebas mendukung drag 360°; cubit untuk zoom.');
         animateScanGuideToTarget();
       });
 
@@ -1191,7 +1324,7 @@
           window.removeEventListener('deviceorientation', handleDeviceOrientation);
           parallaxEnabled = false;
           parallaxToggle.setAttribute('aria-pressed', 'false');
-          parallaxToggle.textContent = 'Aktifkan Parallax';
+          parallaxToggle.textContent = 'Visual: Normal';
         }
         if (parallaxAnimationFrame !== null) {
           window.cancelAnimationFrame(parallaxAnimationFrame);
@@ -1209,6 +1342,10 @@
         if (animationFrame !== null) {
           window.cancelAnimationFrame(animationFrame);
           animationFrame = null;
+        }
+        if (poseTransitionFrame !== null) {
+          window.cancelAnimationFrame(poseTransitionFrame);
+          poseTransitionFrame = null;
         }
         closeDrawer();
         updateImageVisibility();

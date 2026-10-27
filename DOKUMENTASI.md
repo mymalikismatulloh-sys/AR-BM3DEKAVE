@@ -110,10 +110,11 @@ File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar 
 - Untuk mengurangi getaran saat memindai, jaga jarak dan pencahayaan tetap stabil serta tahan HP dengan kedua tangan atau sangga pada permukaan.
 
 ### 4. 👆 Kontrol Interaksi Sentuhan Lengkap (*Multi-Touch Gestures*)
-- **Rotasi 360° Bebas (1 Jari / Drag Mouse):** Saat marker terdeteksi, usap area kamera ke kiri/kanan untuk memutar sumbu Y atau ke atas/bawah untuk memutar sumbu X. Drag ditangkap oleh kanvas AR agar tetap terbaca saat jari bergerak; rotasi dapat berlanjut melewati satu putaran penuh.
+- **Rotasi 360° Bebas (1 Jari / Drag Mouse):** Di mode Bebas, usap area kamera ke kiri/kanan untuk memutar sumbu Y atau ke atas/bawah untuk memutar sumbu X. Drag pada preset Tempel/45° otomatis beralih ke Bebas; gesture ditangkap oleh kanvas AR agar tetap terbaca saat jari bergerak.
 - **Pinch to Zoom (2 Jari):** Mencubit layar untuk memperbesar atau memperkecil skala karya 3D secara dinamis dengan batas aman (*clamped* antara `0.55x` hingga `1.6x`).
 - **Drag Stabil:** Satu jari pada kanvas kamera ditangkap selama gesture sehingga rotasi horizontal dan vertikal tetap terbaca meski jari sedikit keluar dari bidang karya.
-- **Kontrol Rotasi di Layar:** Tombol arah memutar karya per 15° pada sumbu X/Y dan tersedia selama marker terdeteksi. Menu **Atur ulang** mengembalikan rotasi ke awal.
+- **Preset sudut:** **Tempel** menempatkan karya dekat dan sejajar marker; **45°** memiringkannya; **Bebas** membuka rotasi drag dan tombol arah 15° pada sumbu X/Y. Pilihan preset bertransisi halus dan menu **Atur ulang** kembali ke sudut preset aktif.
+- Jarak Tempel memakai offset `0.05` unit virtual MindAR, bukan ukuran sentimeter terkalibrasi. Kalibrasi 5 cm yang akurat memerlukan ukuran fisik marker yang diketahui.
 - **Rekomendasi rotasi paling stabil:** gunakan tombol arah untuk penyetelan sudut kecil, lalu drag satu jari untuk melihat karya dari sudut bebas; tahan HP dengan kedua tangan atau sangga di permukaan agar tracking marker tidak ikut berguncang.
 
 ### 5. 🎛️ Menu Laci Melingkar Futuristik (*Futuristic Radial Menu Drawer*)
@@ -127,7 +128,8 @@ File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar 
     - **Instagram:** [@smkbm_3](https://www.instagram.com/smkbm_3/)
 
 ### 6. 🌄 Mode Parallax 2.5D
-- Saat marker terdeteksi, tekan **Aktifkan Parallax** di kontrol rotasi untuk mengganti sementara gambar utama dengan komposisi tiga layer PNG dari folder `Parallax File`.
+- Saat marker terdeteksi, tekan **Visual: Normal** di kontrol rotasi untuk mengganti sementara gambar utama dengan komposisi tiga layer PNG dari folder `Parallax File`; tombol berubah menjadi **Visual: Parallax** saat aktif.
+- Mode sudut dan gaya visual terpisah: Tempel, 45°, maupun Bebas dapat dipasangkan dengan gambar normal atau Parallax.
 - Kedalaman layer diperkuat agar foreground tampak lebih maju dari midground dan background. Animasi mengambang yang halus berjalan otomatis selama mode aktif, termasuk saat kamera/marker diam.
 - Miringkan HP atau seret satu jari/pointer untuk menggeser layer dengan jarak berbeda. Drag juga memutar karya; efek sensor dan sentuhan bekerja bersamaan.
 - Jika browser iPhone meminta izin sensor gerak, izinkan setelah menekan tombol Parallax. Mode dapat dimatikan kapan saja; rotasi dan zoom tetap bekerja pada komposisi layer.
