@@ -128,7 +128,8 @@ File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar 
 
 ### 6. 🌄 Mode Parallax 2.5D
 - Saat marker terdeteksi, tekan **Aktifkan Parallax** di kontrol rotasi untuk mengganti sementara gambar utama dengan komposisi tiga layer PNG dari folder `Parallax File`.
-- Miringkan HP perlahan untuk menggerakkan layer dengan kedalaman berbeda. Pada desktop, gerakkan pointer di atas kanvas AR.
+- Kedalaman layer diperkuat agar foreground tampak lebih maju dari midground dan background. Animasi mengambang yang halus berjalan otomatis selama mode aktif, termasuk saat kamera/marker diam.
+- Miringkan HP atau seret satu jari/pointer untuk menggeser layer dengan jarak berbeda. Drag juga memutar karya; efek sensor dan sentuhan bekerja bersamaan.
 - Jika browser iPhone meminta izin sensor gerak, izinkan setelah menekan tombol Parallax. Mode dapat dimatikan kapan saja; rotasi dan zoom tetap bekerja pada komposisi layer.
 
 ---

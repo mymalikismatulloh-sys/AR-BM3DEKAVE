@@ -560,6 +560,10 @@
     let activeParallaxRoot = null;
     let activeParallaxLayers = [];
     let parallaxPermissionRequested = false;
+    let parallaxAnimationFrame = null;
+    let parallaxStartedAt = 0;
+    let parallaxInputX = 0;
+    let parallaxInputY = 0;
     let activePointer = null;
     let previousPointerX = 0;
     let previousPointerY = 0;
@@ -574,6 +578,7 @@
     let pinchStartDistance = 0;
     let pinchStartScale = 1;
     const SCAN_GUIDE_VISIBLE_MS = 1200;
+    const PARALLAX_MAX_OFFSET = 0.1;
 
     function setCameraStatus(message, type = '') {
       cameraStatus.textContent = message;
@@ -736,12 +741,27 @@
 
     function setParallaxOffset(horizontal, vertical) {
       if (!parallaxEnabled) return;
-      const maxOffset = 0.055;
+      parallaxInputX = Math.max(-1, Math.min(1, horizontal));
+      parallaxInputY = Math.max(-1, Math.min(1, vertical));
+    }
+
+    function animateParallax(now) {
+      parallaxAnimationFrame = null;
+      if (!parallaxEnabled || !targetVisible || !activeParallaxLayers.length) return;
+
+      const elapsed = (now - parallaxStartedAt) / 1000;
       activeParallaxLayers.forEach(layer => {
         const depth = Number(layer.dataset.parallaxDepth);
-        layer.object3D.position.x = horizontal * maxOffset * depth;
-        layer.object3D.position.y = -vertical * maxOffset * depth;
+        const baseZ = Number(layer.dataset.parallaxBaseZ);
+        const phase = Number(layer.dataset.parallaxPhase);
+        const object = layer.object3D;
+        object.position.x = parallaxInputX * PARALLAX_MAX_OFFSET * depth +
+          Math.sin(elapsed * 0.9 + phase) * 0.003 * depth;
+        object.position.y = -parallaxInputY * PARALLAX_MAX_OFFSET * depth +
+          Math.sin(elapsed * 0.7 + phase) * 0.004 * depth;
+        object.position.z = baseZ + Math.sin(elapsed * 1.1 + phase) * 0.003 * depth;
       });
+      parallaxAnimationFrame = window.requestAnimationFrame(animateParallax);
     }
 
     function handleDeviceOrientation(event) {
@@ -788,11 +808,23 @@
       if (parallaxEnabled) {
         window.addEventListener('deviceorientation', handleDeviceOrientation);
         setParallaxOffset(0, 0);
-        showGestureHint('Parallax aktif. Miringkan HP perlahan untuk menggerakkan layer.');
+        parallaxStartedAt = performance.now();
+        if (parallaxAnimationFrame !== null) {
+          window.cancelAnimationFrame(parallaxAnimationFrame);
+        }
+        parallaxAnimationFrame = window.requestAnimationFrame(animateParallax);
+        showGestureHint('Parallax aktif: miringkan HP atau seret layar untuk menggerakkan layer.');
       } else {
         window.removeEventListener('deviceorientation', handleDeviceOrientation);
         setParallaxOffset(0, 0);
-        showGestureHint('Parallax dimatikan.');
+        if (parallaxAnimationFrame !== null) {
+          window.cancelAnimationFrame(parallaxAnimationFrame);
+          parallaxAnimationFrame = null;
+        }
+        activeParallaxLayers.forEach(layer => {
+          layer.object3D.position.set(0, 0, Number(layer.dataset.parallaxBaseZ));
+        });
+        showGestureHint('Parallax dimatikan. Gambar utama ditampilkan kembali.');
       }
       updateImageVisibility();
     }
@@ -953,6 +985,13 @@
           const deltaY = event.clientY - previousPointerY;
           rotatableImage.object3D.rotation.y += deltaX * 0.01;
           rotatableImage.object3D.rotation.x += deltaY * 0.01;
+          if (parallaxEnabled) {
+            const bounds = canvas.getBoundingClientRect();
+            setParallaxOffset(
+              ((event.clientX - bounds.left) / bounds.width - 0.5) * 2,
+              ((event.clientY - bounds.top) / bounds.height - 0.5) * 2
+            );
+          }
           previousPointerX = event.clientX;
           previousPointerY = event.clientY;
         }
@@ -1092,22 +1131,24 @@
       }
       content.querySelectorAll('a-plane').forEach(plane => plane.classList.add('ar-content-plane'));
       const parallaxLayers = [
-        { asset: 'parallax-background', depth: 0.12 },
-        { asset: 'parallax-midground', depth: 0.32 },
-        { asset: 'parallax-foreground', depth: 0.62 }
+        { asset: 'parallax-background', depth: 0.24, z: -0.025, phase: 0 },
+        { asset: 'parallax-midground', depth: 0.58, z: 0.025, phase: 1.2 },
+        { asset: 'parallax-foreground', depth: 1, z: 0.09, phase: 2.4 }
       ];
       const parallaxRoot = document.createElement('a-entity');
       parallaxRoot.classList.add('parallax-layers');
       parallaxRoot.object3D.visible = false;
-      parallaxLayers.forEach(({ asset, depth }) => {
+      parallaxLayers.forEach(({ asset, depth, z, phase }) => {
         const plane = document.createElement('a-plane');
         plane.classList.add('parallax-layer');
         plane.dataset.parallaxDepth = String(depth);
+        plane.dataset.parallaxBaseZ = String(z);
+        plane.dataset.parallaxPhase = String(phase);
         plane.setAttribute('src', `#${asset}`);
         plane.setAttribute('width', '1');
         plane.setAttribute('height', String(922 / 783));
         plane.setAttribute('material', 'shader: flat; transparent: true; alphaTest: 0.05; side: double');
-        plane.setAttribute('position', `0 0 ${depth * 0.012}`);
+        plane.setAttribute('position', `0 0 ${z}`);
         parallaxRoot.append(plane);
       });
       content.append(parallaxRoot);
@@ -1152,6 +1193,12 @@
           parallaxToggle.setAttribute('aria-pressed', 'false');
           parallaxToggle.textContent = 'Aktifkan Parallax';
         }
+        if (parallaxAnimationFrame !== null) {
+          window.cancelAnimationFrame(parallaxAnimationFrame);
+          parallaxAnimationFrame = null;
+        }
+        parallaxInputX = 0;
+        parallaxInputY = 0;
         activeParallaxRoot = null;
         activeParallaxLayers = [];
         activePointer = null;
