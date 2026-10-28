@@ -51,16 +51,15 @@ Proyek ini dibuat menggunakan teknologi web standar sehingga sangat ringan dan k
 f:\Project AR NEW/
 │
 ├── Karya/                      # Direktori koleksi aset visual karya siswa DKV
-│   ├── Artboard 1@300x-100.jpg # Aset visual untuk Target Index 0
-│   ├── Bilqis X DKV 01.png     # Aset visual untuk Target Index 1
-│   ├── Rizka Afrilia Azzahra XI DKV 2 .png # Aset visual untuk Target Index 2
-│   ├── maaf salah masukin.jpg  # Aset visual untuk Target Index 3
-│   └── ... (aset ilustrasi dan desain pendukung lainnya)
+│   └── ... (aset sumber asli; tidak diubah)
+├── AR Artwork Display/          # Salinan karya untuk ditampilkan di atas marker
+├── AR Target Assets/            # 25 kartu marker unik berurutan untuk MindAR
 │
 ├── Video/                      # Direktori aset video proyeksi AR
 │   └── pecah lagu pecah lai.mp4# Video multimedia untuk ekstensi AR video
 │
 ├── index.html                  # File inti aplikasi WebAR (UI, Scene AR, & Skrip Interaktif)
+├── ar-targets.js               # Daftar target bawaan, karya, dan profil parallax
 ├── targets.mind                # File kompilasi target marker yang dibaca oleh MindAR
 ├── studio.html                 # Editor karya tanpa login (mode lokal)
 ├── studio.js                   # Operasi Studio Editor lokal
@@ -77,16 +76,39 @@ f:\Project AR NEW/
 
 ## 🎯 Daftar Target Marker & Aset
 
-File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar dengan pemetaan berikut di [index.html](index.html):
+Katalog bawaan mencakup semua 27 file gambar dari folder `Karya`, tetapi membuat 25 marker unik karena dua pasangan file identik secara byte. File target ada di `AR Target Assets`; nomor prefix **00–24** adalah index MindAR yang wajib dipertahankan ketika membuat [targets.mind](targets.mind). Pemetaan sumber dan profil parallax ada di [ar-targets.js](ar-targets.js).
 
-| Target Index | ID Entitas AR | Sumber Aset Gambar | Rasio Ukuran Bidang 3D (W × H) |
-| :---: | :---: | :---: | :---: |
-| **0** | `#image-target-0` | `Karya/Artboard 1@300x-100.jpg` | `1.0 × 1.78` |
-| **1** | `#image-target-1` | `Karya/Bilqis X DKV 01.png` | `1.0 × 1.414` |
-| **2** | `#image-target-2` | `Karya/Rizka Afrilia Azzahra XI DKV 2 .png` | `1.0 × 1.414` |
-| **3** | `#image-target-3` | `Karya/maaf salah masukin.jpg` | `1.0 × 0.702` |
+| Index | File target untuk compiler | Gambar sumber di `Karya` |
+| :---: | --- | --- |
+| **0** | `00-Artboard 1@300x-100-scan.jpg` | `Artboard 1@300x-100.jpg` |
+| **1** | `01-Bilqis X DKV 01-scan.jpg` | `Bilqis X DKV 01.png` |
+| **2** | `02-Rizka Afrilia Azzahra XI DKV 2 -scan.jpg` | `Rizka Afrilia Azzahra XI DKV 2 .png` |
+| **3** | `03-maaf salah masukin-scan.jpg` | `maaf salah masukin.jpg` |
+| **4** | `04-DEVI@300x-100-scan.jpg` | `DEVI@300x-100.jpg` |
+| **5** | `05-Dev ka@300x-100-scan.jpg` | `Dev ka@300x-100.jpg` |
+| **6** | `06-Dkv projek Tumblr  (1)-scan.jpg` | Kedua file `Dkv projek Tumblr...` yang identik |
+| **7** | `07-IMG-20260928-WA0038 (1)-scan.jpg` | Kedua file `IMG-20260928-WA0038...` yang identik |
+| **8** | `08-IMG-20260928-WA0039-scan.jpg` | `IMG-20260928-WA0039.jpg` |
+| **9** | `09-Joa-scan.jpg` | `Joa.png` |
+| **10** | `10-SaveClip.App_489624507_17911917345100335_8526701999727992735_n-scan.jpg` | File SaveClip `489624507` |
+| **11** | `11-SaveClip.App_685092227_17966547537100335_584022250440278924_n-scan.jpg` | File SaveClip `685092227` |
+| **12** | `12-SaveClip.App_742405981_18054936182560261_5124495506156634550_n-scan.jpg` | File SaveClip `742405981` |
+| **13** | `13-SaveClip.App_744109045_18054936194560261_5374961319785340700_n-scan.jpg` | File SaveClip `744109045` |
+| **14** | `14-SaveClip.App_750255846_18054936203560261_1255905370728734016_n-scan.jpg` | File SaveClip `750255846` |
+| **15** | `15-Tak berjudul10_20260603191626-scan.jpg` | `Tak berjudul10_20260603191626.jpg` |
+| **16** | `16-file_00000000d3fc7206a9ab7e49cff85ec6-scan.jpg` | `file_00000000d3fc7206a9ab7e49cff85ec6.png` |
+| **17** | `17-hapibidi si kembar-scan.jpg` | `hapibidi si kembar.webp` |
+| **18** | `18-hepi niwyir ceritanya-scan.jpg` | `hepi niwyir ceritanya.webp` |
+| **19** | `19-hipi vilintin-scan.jpg` | `hipi vilintin.webp` |
+| **20** | `20-koleb sm pentol-scan.jpg` | `koleb sm pentol.webp` |
+| **21** | `21-noah nyengir-scan.jpg` | `noah nyengir.jpeg` |
+| **22** | `22-siblings-scan.jpg` | `siblings.webp` |
+| **23** | `23-ycyan-scan.jpg` | `ycyan.jpeg` |
+| **24** | `24-yejun hapibidi-scan.jpg` | `yejun hapibidi.webp` |
 
-> Setiap target dirender dengan **2 sisi (Double-Sided Plane)**: satu sisi menghadap ke depan dan satu sisi diputar 180° menghadap ke belakang sehingga karya tetap terlihat jelas saat dilihat dari sudut berlawanan.
+> File asli di `Karya` tidak diubah. Kartu scan mempertahankan karya di tengah dan menambahkan bingkai pola kontras yang unik. Kompilasi awal gambar polos memiliki titik tracking rendah pada index **7 (4 titik), 9 (11), 12 (10), 13 (14), 14 (11), 15 (13), dan 21 (8)**; bingkai baru dirancang untuk memberi fitur tambahan di area tersebut. Cetak file kartu tanpa memotong bingkai.
+
+Setiap karya dirender pada plane dua sisi (*double-sided*) agar tetap terlihat saat diputar dari sudut berlawanan.
 
 ---
 
@@ -100,7 +122,7 @@ File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar 
 - Jika kamera gagal dimulai, instruksi sesuai galat ditampilkan bersama tombol **Coba kamera lagi**.
 
 ### 2. 🔲 Panduan Pemindaian Cerdas (*Dynamic Scanning Indicator*)
-- Kartu panduan mengarahkan pengguna mencari marker, menjaga pencahayaan, dan mengembalikan pengguna ke mode pemindaian saat marker hilang.
+- Kartu panduan mengarahkan pengguna mencari marker, menampilkan gambar utuh yang memenuhi sebagian besar layar, menjaga HP stabil, menghindari pantulan, dan kembali ke mode pemindaian saat marker hilang.
 - Elemen SVG memberikan retikel lembut di tengah layar saat mencari target. Saat target terdeteksi (`targetFound`), garis hijau mengikuti proyeksi keempat sudut marker selama sekitar 1,2 detik lalu menghilang; retikel pencarian kembali jika marker hilang. Rasio marker berasal dari ukuran gambar target sehingga bingkai menyesuaikan bentuk, perspektif, jarak, dan pergerakan kamera.
 - Panduan menghormati pengaturan **reduced motion** pada perangkat.
 
@@ -128,11 +150,11 @@ File [targets.mind](targets.mind) menyimpan fitur pelacakan untuk target gambar 
     - **Instagram:** [@smkbm_3](https://www.instagram.com/smkbm_3/)
 
 ### 6. 🌄 Mode Parallax 2.5D
-- Saat marker terdeteksi, tekan **Visual: Normal** di kontrol rotasi untuk mengganti sementara gambar utama dengan komposisi tiga layer PNG dari folder `Parallax File`; tombol berubah menjadi **Visual: Parallax** saat aktif.
+- Saat marker terdeteksi, tekan **Visual: Normal** di kontrol rotasi untuk mengaktifkan gerakan parallax pada karya yang sedang dipindai; tombol berubah menjadi **Visual: Parallax** saat aktif.
 - Mode sudut dan gaya visual terpisah: Tempel, 45°, maupun Bebas dapat dipasangkan dengan gambar normal atau Parallax.
-- Kedalaman layer diperkuat agar foreground tampak lebih maju dari midground dan background. Animasi mengambang yang halus berjalan otomatis selama mode aktif, termasuk saat kamera/marker diam.
-- Miringkan HP atau seret satu jari/pointer untuk menggeser layer dengan jarak berbeda. Drag juga memutar karya; efek sensor dan sentuhan bekerja bersamaan.
-- Jika browser iPhone meminta izin sensor gerak, izinkan setelah menekan tombol Parallax. Mode dapat dimatikan kapan saja; rotasi dan zoom tetap bekerja pada komposisi layer.
+- Efek memakai gambar yang sama dengan target dan setiap karya memiliki sensitivitas geser serta kemiringan sendiri, sehingga layer dari gambar lain tidak pernah tampil. Respons sensor dihaluskan untuk mengurangi getaran.
+- Miringkan HP atau gerakkan pointer untuk menggeser dan memiringkan bidang gambar. Drag juga memutar karya; efek sensor dan sentuhan bekerja bersamaan.
+- Ini efek 2.5D pada bidang gambar. Kedalaman foreground/background yang benar membutuhkan aset layer terpisah yang dipotong khusus untuk masing-masing karya.
 
 ---
 
@@ -202,7 +224,7 @@ Untuk menguji langsung menggunakan kamera ponsel tanpa deployment internet:
    ```powershell
    npx ngrok http 8080
    ```
-4. Buka URL HTTPS dari ngrok di browser Chrome/Safari pada HP Anda, izinkan akses kamera, lalu arahkan ke gambar target!
+4. Buka URL HTTPS dari ngrok di browser Chrome/Safari pada HP Anda, izinkan akses kamera, lalu arahkan ke kartu scan yang sudah dicetak!
 
 ---
 
@@ -227,15 +249,14 @@ Aplikasi ini bersifat statis (*Client-Side Static Web*), sehingga sangat mudah d
 
 Jika Anda ingin mengganti atau menambah karya seni baru sebagai target pemindaian:
 
-1. Siapkan file gambar target (disarankan format JPG/PNG dengan kontras warna yang baik dan kaya fitur visual/tekstur).
+1. Siapkan karya asli dan buat kartu marker dengan bingkai unik; kartu marker inilah yang harus dicetak dan dipindai.
 2. Kunjungi tool compiler resmi MindAR:
    👉 **[MindAR Image Compiler Online](https://hiukim.github.io/mind-ar-js-doc/tools/compile)**
-3. Unggah seluruh gambar target yang ingin dimasukkan secara berurutan.
+3. Unggah 25 kartu di folder `AR Target Assets` sesuai urutan nomor prefix **00–24**. Jangan mengubah urutan atau menambahkan file alias yang identik.
 4. Klik **Compile** dan unduh file hasilnya, lalu beri nama `targets.mind`.
 5. Timpa file `targets.mind` lama di folder proyek dengan file yang baru diunduh.
-6. Perbarui konfigurasi di [index.html](index.html):
-   - Tambahkan elemen `<img id="target-image-X" src="Karya/nama-file.jpg">` di dalam `<a-assets>`.
-   - Tambahkan `<a-entity mindar-image-target="targetIndex: X" ...>` di dalam `<a-scene>` dengan menyesuaikan rasio tinggi dan lebar karya.
+6. Cetak semua kartu pada ukuran yang mempertahankan rasio gambar dan pastikan bingkai penuh tidak terpotong. Saat dipindai, aplikasi hanya menampilkan karya asli di tengah kartu.
+7. Untuk menambah karya berikutnya, tambahkan kartu marker baru dan entri yang sama urutannya ke [ar-targets.js](ar-targets.js), termasuk artwork dan profil parallax tersendiri. Entitas AR dan rasio plane akan dibuat otomatis.
 
 ---
 
@@ -245,7 +266,7 @@ Jika Anda ingin mengganti atau menambah karya seni baru sebagai target pemindaia
 | :--- | :--- | :--- |
 | **Kamera tidak muncul / layar hitam** | Protokol bukan HTTPS atau izin kamera diblokir browser. | Pastikan mengakses via `http://localhost` (lokal) atau via **HTTPS** jika diakses dari perangkat lain / internet. Periksa pengaturan izin situs di browser dan pilih *Allow Camera*. |
 | **Pesan "Error loading targets.mind"** | File dibuka langsung dengan cara *double click* (`file:///...`). | Browser memblokir pembacaan file lokal dengan fetch karena aturan CORS. Selalu jalankan melalui HTTP Server (`python -m http.server` atau `npx serve`). |
-| **Marker sulit terdeteksi oleh kamera** | Gambar target terlalu polos atau pencahayaan ruangan kurang. | Gunakan gambar dengan detail visual tinggi (banyak sudut/teks/kontras). Hindari gambar yang hanya memiliki warna gradasi polos atau permukaan memantulkan cahaya. |
+| **Marker sulit terdeteksi oleh kamera** | Gambar terlalu polos/berisi area putih luas, kamera bergerak terlalu cepat, cahaya kurang, atau ada pantulan. | Ratakan gambar, tampilkan seluruh marker memenuhi sebagian besar layar, tahan HP stabil, tambah cahaya menyebar, dan hindari pantulan. Gambar line-art sederhana mungkin tetap perlu bingkai marker bertekstur saat dicetak agar tracking andal. |
 | **Gambar 3D terlihat gepeng atau terdistorsi** | Rasio bidang `a-plane` tidak cocok dengan rasio asli gambar. | Sesuaikan atribut `width` dan `height` pada elemen `a-plane` di `index.html` sesuai rasio gambar asli (contoh: `width="1" height="1.414"` untuk format standar A4). |
 
 ---

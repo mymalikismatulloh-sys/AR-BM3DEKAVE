@@ -513,65 +513,16 @@
     </nav>
   </div>
   <!-- Ganti imageTargetSrc dengan file .mind Anda -->
-  <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-    
-    <a-assets>
-      <img id="target-image-0" src="Karya/Artboard 1@300x-100.jpg">
-      <img id="target-image-1" src="Karya/Bilqis X DKV 01.png">
-      <img id="target-image-2" src="Karya/Rizka Afrilia Azzahra XI DKV 2 .png">
-      <img id="target-image-3" src="Karya/maaf salah masukin.jpg">
-      <img id="parallax-background" src="Parallax File/parallax_layers_af82139e/03_background.png">
-      <img id="parallax-midground" src="Parallax File/parallax_layers_af82139e/02_midground.png">
-      <img id="parallax-foreground" src="Parallax File/parallax_layers_af82139e/01_foreground.png">
-    </a-assets>
+  <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; maxTrack: 1; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-assets></a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-    <a-entity id="image-target-0" mindar-image-target="targetIndex: 0" data-image-id="target-image-0">
-      <a-entity id="rotatable-image-0" class="rotatable-image" position="0 0 0.65">
-        <a-plane
-          src="#target-image-0"
-          width="1"
-          height="1.78"
-          material="shader: flat"
-        ></a-plane>
-        <a-plane
-          src="#target-image-0"
-          rotation="0 180 0"
-          position="0 0 -0.002"
-          width="1"
-          height="1.78"
-          material="shader: flat"
-        ></a-plane>
-      </a-entity>
-    </a-entity>
-
-    <a-entity id="image-target-1" mindar-image-target="targetIndex: 1" data-image-id="target-image-1">
-      <a-entity id="rotatable-image-1" class="rotatable-image" position="0 0 0.65">
-        <a-plane src="#target-image-1" width="1" height="1.414" material="shader: flat"></a-plane>
-        <a-plane src="#target-image-1" rotation="0 180 0" position="0 0 -0.002" width="1" height="1.414" material="shader: flat"></a-plane>
-      </a-entity>
-    </a-entity>
-
-    <a-entity id="image-target-2" mindar-image-target="targetIndex: 2" data-image-id="target-image-2">
-      <a-entity id="rotatable-image-2" class="rotatable-image" position="0 0 0.65">
-        <a-plane src="#target-image-2" width="1" height="1.414" material="shader: flat"></a-plane>
-        <a-plane src="#target-image-2" rotation="0 180 0" position="0 0 -0.002" width="1" height="1.414" material="shader: flat"></a-plane>
-      </a-entity>
-    </a-entity>
-
-    <a-entity id="image-target-3" mindar-image-target="targetIndex: 3" data-image-id="target-image-3">
-      <a-entity id="rotatable-image-3" class="rotatable-image" position="0 0 0.65">
-        <a-plane src="#target-image-3" width="1" height="0.702" material="shader: flat"></a-plane>
-        <a-plane src="#target-image-3" rotation="0 180 0" position="0 0 -0.002" width="1" height="0.702" material="shader: flat"></a-plane>
-      </a-entity>
-    </a-entity>
   </a-scene>
 
   <div id="scanning-overlay" aria-live="polite">
     <section id="scan-guidance">
       <h1 id="scan-guidance-title">Siap memindai?</h1>
-      <p id="scan-guidance-description">Tekan tombol untuk mengaktifkan kamera dan mulai mencari marker.</p>
+      <p id="scan-guidance-description">Tekan mulai, lalu arahkan kamera perlahan ke gambar yang rata, terang, dan terlihat utuh.</p>
       <button id="retry-camera" class="visible" type="button">Mulai pemindaian</button>
     </section>
   </div>
@@ -605,13 +556,14 @@
     let configuredPoseZ = 0.65;
     let poseTransitionFrame = null;
     let parallaxEnabled = false;
-    let activeParallaxRoot = null;
-    let activeParallaxLayers = [];
+    let activeParallaxPlanes = [];
+    let activeParallaxProfile = null;
     let parallaxPermissionRequested = false;
     let parallaxAnimationFrame = null;
-    let parallaxStartedAt = 0;
     let parallaxInputX = 0;
     let parallaxInputY = 0;
+    let parallaxCurrentX = 0;
+    let parallaxCurrentY = 0;
     let activePointer = null;
     let previousPointerX = 0;
     let previousPointerY = 0;
@@ -626,7 +578,7 @@
     let pinchStartDistance = 0;
     let pinchStartScale = 1;
     const SCAN_GUIDE_VISIBLE_MS = 1200;
-    const PARALLAX_MAX_OFFSET = 0.1;
+    const PARALLAX_SMOOTHING = 0.12;
     const POSE_MODES = {
       attached: { label: 'Tempel', z: 0.05, rotationX: 0 },
       angle: { label: '45°', z: 0.2, rotationX: -Math.PI / 4 },
@@ -781,11 +733,6 @@
 
     function updateImageVisibility() {
       rotatableImage.object3D.visible = targetVisible && imageEnabled;
-      const originalPlanes = rotatableImage.querySelectorAll('.ar-content-plane');
-      originalPlanes.forEach(plane => {
-        plane.object3D.visible = !parallaxEnabled;
-      });
-      if (activeParallaxRoot) activeParallaxRoot.object3D.visible = parallaxEnabled;
       gameDrawer.classList.toggle('visible', targetVisible);
       rotationController.classList.toggle('visible', targetVisible && imageEnabled);
       rotationController.setAttribute('aria-hidden', String(!targetVisible || !imageEnabled));
@@ -862,21 +809,30 @@
       parallaxInputY = Math.max(-1, Math.min(1, vertical));
     }
 
+    function resetParallaxPlanes() {
+      activeParallaxPlanes.forEach(({ object, basePosition, baseRotation }) => {
+        object.position.copy(basePosition);
+        object.rotation.copy(baseRotation);
+      });
+      parallaxInputX = 0;
+      parallaxInputY = 0;
+      parallaxCurrentX = 0;
+      parallaxCurrentY = 0;
+    }
+
     function animateParallax(now) {
       parallaxAnimationFrame = null;
-      if (!parallaxEnabled || !targetVisible || !activeParallaxLayers.length) return;
+      if (!parallaxEnabled || !targetVisible || !activeParallaxPlanes.length || !activeParallaxProfile) return;
 
-      const elapsed = (now - parallaxStartedAt) / 1000;
-      activeParallaxLayers.forEach(layer => {
-        const depth = Number(layer.dataset.parallaxDepth);
-        const baseZ = Number(layer.dataset.parallaxBaseZ);
-        const phase = Number(layer.dataset.parallaxPhase);
-        const object = layer.object3D;
-        object.position.x = parallaxInputX * PARALLAX_MAX_OFFSET * depth +
-          Math.sin(elapsed * 0.9 + phase) * 0.003 * depth;
-        object.position.y = -parallaxInputY * PARALLAX_MAX_OFFSET * depth +
-          Math.sin(elapsed * 0.7 + phase) * 0.004 * depth;
-        object.position.z = baseZ + Math.sin(elapsed * 1.1 + phase) * 0.003 * depth;
+      parallaxCurrentX += (parallaxInputX - parallaxCurrentX) * PARALLAX_SMOOTHING;
+      parallaxCurrentY += (parallaxInputY - parallaxCurrentY) * PARALLAX_SMOOTHING;
+      activeParallaxPlanes.forEach(({ object, basePosition, baseRotation }) => {
+        object.position.copy(basePosition);
+        object.position.x += parallaxCurrentX * activeParallaxProfile.shiftX;
+        object.position.y -= parallaxCurrentY * activeParallaxProfile.shiftY;
+        object.rotation.copy(baseRotation);
+        object.rotation.x += parallaxCurrentY * activeParallaxProfile.tilt;
+        object.rotation.y += parallaxCurrentX * activeParallaxProfile.tilt;
       });
       parallaxAnimationFrame = window.requestAnimationFrame(animateParallax);
     }
@@ -892,18 +848,6 @@
     async function toggleParallax() {
       if (!targetVisible || !imageEnabled) return;
       const enabling = !parallaxEnabled;
-      if (enabling) {
-        const missingAssets = ['parallax-background', 'parallax-midground', 'parallax-foreground']
-          .filter(id => {
-            const image = document.getElementById(id);
-            return !image || !image.complete || image.naturalWidth === 0;
-          });
-        if (missingAssets.length) {
-          console.error('Aset Parallax gagal dimuat:', missingAssets);
-          showGestureHint('Layer Parallax gagal dimuat. Periksa file di folder Parallax File.');
-          return;
-        }
-      }
       if (enabling && !parallaxPermissionRequested) {
         parallaxPermissionRequested = true;
         const orientation = window.DeviceOrientationEvent;
@@ -925,23 +869,19 @@
       if (parallaxEnabled) {
         window.addEventListener('deviceorientation', handleDeviceOrientation);
         setParallaxOffset(0, 0);
-        parallaxStartedAt = performance.now();
         if (parallaxAnimationFrame !== null) {
           window.cancelAnimationFrame(parallaxAnimationFrame);
         }
         parallaxAnimationFrame = window.requestAnimationFrame(animateParallax);
-        showGestureHint('Parallax aktif: miringkan HP atau seret layar untuk menggerakkan layer.');
+        showGestureHint('Parallax khusus karya aktif: miringkan HP atau gerakkan pointer.');
       } else {
         window.removeEventListener('deviceorientation', handleDeviceOrientation);
-        setParallaxOffset(0, 0);
         if (parallaxAnimationFrame !== null) {
           window.cancelAnimationFrame(parallaxAnimationFrame);
           parallaxAnimationFrame = null;
         }
-        activeParallaxLayers.forEach(layer => {
-          layer.object3D.position.set(0, 0, Number(layer.dataset.parallaxBaseZ));
-        });
-        showGestureHint('Parallax dimatikan. Gambar utama ditampilkan kembali.');
+        resetParallaxPlanes();
+        showGestureHint('Parallax dimatikan. Karya kembali ke posisi normal.');
       }
       updateImageVisibility();
     }
@@ -1148,7 +1088,7 @@
       console.log("Scene AR siap!");
       resetScanGuide();
       setCameraStatus('Kamera aktif. Arahkan ke marker.', 'ready');
-      setScanGuidance('Arahkan kamera ke marker', 'Dekatkan gambar target ke dalam bingkai dan pastikan pencahayaan cukup.');
+      setScanGuidance('Arahkan kamera ke marker', 'Tampilkan seluruh gambar, penuhi sebagian besar layar, tahan HP stabil, dan hindari pantulan cahaya.');
       retryCameraButton.classList.remove('visible');
       retryCameraButton.textContent = 'Mulai pemindaian';
     });
@@ -1257,28 +1197,6 @@
         return;
       }
       content.querySelectorAll('a-plane').forEach(plane => plane.classList.add('ar-content-plane'));
-      const parallaxLayers = [
-        { asset: 'parallax-background', depth: 0.24, z: -0.025, phase: 0 },
-        { asset: 'parallax-midground', depth: 0.58, z: 0.025, phase: 1.2 },
-        { asset: 'parallax-foreground', depth: 1, z: 0.09, phase: 2.4 }
-      ];
-      const parallaxRoot = document.createElement('a-entity');
-      parallaxRoot.classList.add('parallax-layers');
-      parallaxRoot.object3D.visible = false;
-      parallaxLayers.forEach(({ asset, depth, z, phase }) => {
-        const plane = document.createElement('a-plane');
-        plane.classList.add('parallax-layer');
-        plane.dataset.parallaxDepth = String(depth);
-        plane.dataset.parallaxBaseZ = String(z);
-        plane.dataset.parallaxPhase = String(phase);
-        plane.setAttribute('src', `#${asset}`);
-        plane.setAttribute('width', '1');
-        plane.setAttribute('height', String(922 / 783));
-        plane.setAttribute('material', 'shader: flat; transparent: true; alphaTest: 0.05; side: double');
-        plane.setAttribute('position', `0 0 ${z}`);
-        parallaxRoot.append(plane);
-      });
-      content.append(parallaxRoot);
 
       target.addEventListener("targetFound", () => {
         console.log(`Target gambar ${target.id} ditemukan!`);
@@ -1290,8 +1208,20 @@
           ? Number(configuredZ)
           : rotatableImage.object3D.position.z;
         if (!Number.isFinite(configuredPoseZ)) configuredPoseZ = 0.65;
-        activeParallaxRoot = parallaxRoot;
-        activeParallaxLayers = Array.from(parallaxRoot.querySelectorAll('.parallax-layer'));
+        activeParallaxPlanes = Array.from(content.querySelectorAll('.ar-content-plane')).map(plane => ({
+          object: plane.object3D,
+          basePosition: plane.object3D.position.clone(),
+          baseRotation: plane.object3D.rotation.clone()
+        }));
+        activeParallaxProfile = {
+          shiftX: Number(target.dataset.parallaxX),
+          shiftY: Number(target.dataset.parallaxY),
+          tilt: Number(target.dataset.parallaxTilt)
+        };
+        if (Object.values(activeParallaxProfile).some(value => !Number.isFinite(value))) {
+          console.error(`Profil parallax untuk target "${target.id}" tidak valid.`);
+          activeParallaxProfile = { shiftX: 0.025, shiftY: 0.025, tilt: 0.03 };
+        }
         if (!rotatableImage) {
           console.error(`Konten AR untuk target "${target.id}" tidak ditemukan.`);
           setCameraStatus('Konten karya AR gagal dimuat.', 'error');
@@ -1306,8 +1236,9 @@
         updateImageVisibility();
         if (imageEnabled) animateImageIn();
         closeDrawer();
-        setCameraStatus('Target berhasil dipindai.', 'ready');
-        setScanGuidance('Marker terdeteksi', 'Pertahankan marker dalam pandangan kamera.');
+        const targetName = target.dataset.targetName || target.id;
+        setCameraStatus(`Terdeteksi: ${targetName}`, 'ready');
+        setScanGuidance('Marker terdeteksi', `Karya "${targetName}" ditemukan. Pertahankan gambar di dalam pandangan kamera.`);
         showGestureHint('Pilih Tempel, 45°, atau Bebas. Mode Bebas mendukung drag 360°; cubit untuk zoom.');
         animateScanGuideToTarget();
       });
@@ -1332,8 +1263,9 @@
         }
         parallaxInputX = 0;
         parallaxInputY = 0;
-        activeParallaxRoot = null;
-        activeParallaxLayers = [];
+        resetParallaxPlanes();
+        activeParallaxPlanes = [];
+        activeParallaxProfile = null;
         activePointer = null;
         activePointers.clear();
         drawerPointerId = null;
@@ -1394,10 +1326,76 @@
     }
   </script>
   <script type="module">
+    import { AR_TARGETS } from './ar-targets.js';
     import { getMindFile, getTargets } from './studio-storage.js';
 
     const scene = document.querySelector('a-scene');
     const syncStatus = document.getElementById('studio-sync-status');
+
+    function setParallaxProfile(target, values) {
+      target.dataset.parallaxX = String(values[0]);
+      target.dataset.parallaxY = String(values[1]);
+      target.dataset.parallaxTilt = String(values[2]);
+    }
+
+    async function waitForImage(image, source) {
+      if (!image.complete) {
+        await new Promise((resolve, reject) => {
+          image.addEventListener('load', resolve, { once: true });
+          image.addEventListener('error', () => reject(new Error(`Gambar gagal dimuat: ${source}`)), { once: true });
+        });
+      }
+      if (!image.naturalWidth || !image.naturalHeight) {
+        throw new Error(`Gambar tidak valid: ${source}`);
+      }
+    }
+
+    async function addBuiltInTargets() {
+      const assets = scene.querySelector('a-assets');
+      for (const [targetIndex, artwork] of AR_TARGETS.entries()) {
+        const markerId = `target-image-${targetIndex}`;
+        const marker = document.createElement('img');
+        marker.id = markerId;
+        marker.src = artwork.file;
+        assets.append(marker);
+        const artworkId = `ar-content-${targetIndex}`;
+        const displayImage = document.createElement('img');
+        displayImage.id = artworkId;
+        displayImage.src = artwork.artworkFile;
+        assets.append(displayImage);
+        await Promise.all([waitForImage(marker, artwork.file), waitForImage(displayImage, artwork.artworkFile)]);
+
+        const height = displayImage.naturalHeight / displayImage.naturalWidth;
+        const target = document.createElement('a-entity');
+        target.id = `image-target-${targetIndex}`;
+        target.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
+        target.dataset.imageId = markerId;
+        target.dataset.targetName = artwork.name;
+        setParallaxProfile(target, artwork.parallax);
+
+        const stage = document.createElement('a-entity');
+        stage.setAttribute('position', '0 0 0.65');
+        const pedestal = document.createElement('a-cylinder');
+        pedestal.setAttribute('radius', '0.56');
+        pedestal.setAttribute('height', '0.06');
+        pedestal.setAttribute('position', `0 ${0.08 - height / 2 - 0.04} 0`);
+        pedestal.setAttribute('material', 'color: #10232c; metalness: 0.2; roughness: 0.85');
+
+        const wrapper = document.createElement('a-entity');
+        wrapper.classList.add('rotatable-image');
+        wrapper.dataset.baseZ = '0.05';
+        wrapper.setAttribute('position', '0 0.08 0.05');
+        const plane = document.createElement('a-plane');
+        plane.setAttribute('src', `#${artworkId}`);
+        plane.setAttribute('width', '1');
+        plane.setAttribute('height', String(height));
+        plane.setAttribute('material', 'shader: flat; side: double; transparent: true');
+        wrapper.append(plane);
+        stage.append(pedestal, wrapper);
+        target.append(stage);
+        scene.append(target);
+      }
+    }
 
     function addTarget(record, markerUrl, contentUrl) {
       const assets = scene.querySelector('a-assets');
@@ -1422,23 +1420,25 @@
       target.id = `image-target-${record.target_index}`;
       target.setAttribute('mindar-image-target', `targetIndex: ${record.target_index}`);
       target.dataset.imageId = markerId;
+      target.dataset.targetName = record.title;
+      const titleHash = Array.from(record.title || String(record.target_index))
+        .reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0, 0);
+      setParallaxProfile(target, [
+        0.02 + (titleHash % 16) / 1000,
+        0.02 + ((titleHash >>> 4) % 16) / 1000,
+        0.025 + ((titleHash >>> 8) % 20) / 1000
+      ]);
       const wrapper = document.createElement('a-entity');
       wrapper.classList.add('rotatable-image');
       wrapper.dataset.baseZ = String(record.position_z);
       wrapper.setAttribute('position', `${record.position_x} ${record.position_y} ${record.position_z}`);
 
-      [false, true].forEach(backSide => {
-        const plane = document.createElement('a-plane');
-        plane.setAttribute('src', `#${contentId}`);
-        plane.setAttribute('width', String(record.width));
-        plane.setAttribute('height', String(record.height));
-        plane.setAttribute('material', 'shader: flat');
-        if (backSide) {
-          plane.setAttribute('rotation', '0 180 0');
-          plane.setAttribute('position', '0 0 -0.002');
-        }
-        wrapper.append(plane);
-      });
+      const plane = document.createElement('a-plane');
+      plane.setAttribute('src', `#${contentId}`);
+      plane.setAttribute('width', String(record.width));
+      plane.setAttribute('height', String(record.height));
+      plane.setAttribute('material', 'shader: flat; side: double');
+      wrapper.append(plane);
       target.append(wrapper);
       scene.append(target);
     }
@@ -1448,7 +1448,8 @@
         .filter(record => record.enabled)
         .sort((left, right) => left.target_index - right.target_index);
       if (!records.length) {
-        syncStatus.textContent = 'Studio lokal kosong; menggunakan katalog bawaan.';
+        await addBuiltInTargets();
+        syncStatus.textContent = `Katalog AR · ${AR_TARGETS.length} marker unik dari 27 file`;
         return;
       }
 
