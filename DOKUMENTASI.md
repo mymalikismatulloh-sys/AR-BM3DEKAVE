@@ -120,9 +120,11 @@ Setiap karya dirender pada plane dua sisi (*double-sided*) agar tetap terlihat s
 - MindAR mengelola permintaan kamera dan izin satu kali; aplikasi tidak membuka aliran kamera kedua hanya untuk memeriksa status.
 - Status kamera membedakan proses mulai, kamera aktif, target ditemukan/hilang, dan beberapa penyebab kegagalan umum.
 - Jika kamera gagal dimulai, instruksi sesuai galat ditampilkan bersama tombol **Coba kamera lagi**.
+- Tombol **Galeri gambar** menampilkan marker yang aktif dari katalog bawaan atau Studio lokal. Pengguna dapat mencari nama karya dan memilih marker untuk mendapat panduan pemindaian; daftar galeri mengikuti target yang benar-benar dimuat ke scene AR.
 
 ### 2. 🔲 Panduan Pemindaian Cerdas (*Dynamic Scanning Indicator*)
 - Kartu panduan mengarahkan pengguna mencari marker, menampilkan gambar utuh yang memenuhi sebagian besar layar, menjaga HP stabil, menghindari pantulan, dan kembali ke mode pemindaian saat marker hilang.
+- Jika marker belum ditemukan, instruksi berganti bertahap untuk membantu menyesuaikan jarak kamera, pencahayaan/pantulan, serta gerakan dan fokus. Panduan berhenti saat marker terdeteksi dan dimulai kembali jika marker hilang.
 - Elemen SVG memberikan retikel lembut di tengah layar saat mencari target. Saat target terdeteksi (`targetFound`), garis hijau mengikuti proyeksi keempat sudut marker selama sekitar 1,2 detik lalu menghilang; retikel pencarian kembali jika marker hilang. Rasio marker berasal dari ukuran gambar target sehingga bingkai menyesuaikan bentuk, perspektif, jarak, dan pergerakan kamera.
 - Panduan menghormati pengaturan **reduced motion** pada perangkat.
 
@@ -135,8 +137,8 @@ Setiap karya dirender pada plane dua sisi (*double-sided*) agar tetap terlihat s
 - **Rotasi 360° Bebas (1 Jari / Drag Mouse):** Di mode Bebas, usap area kamera ke kiri/kanan untuk memutar sumbu Y atau ke atas/bawah untuk memutar sumbu X. Drag pada preset Tempel/45° otomatis beralih ke Bebas; gesture ditangkap oleh kanvas AR agar tetap terbaca saat jari bergerak.
 - **Pinch to Zoom (2 Jari):** Mencubit layar untuk memperbesar atau memperkecil skala karya 3D secara dinamis dengan batas aman (*clamped* antara `0.55x` hingga `1.6x`).
 - **Drag Stabil:** Satu jari pada kanvas kamera ditangkap selama gesture sehingga rotasi horizontal dan vertikal tetap terbaca meski jari sedikit keluar dari bidang karya.
-- **Preset sudut:** **Tempel** menempatkan karya dekat dan sejajar marker; **45°** memiringkannya; **Bebas** membuka rotasi drag dan tombol arah 15° pada sumbu X/Y. Pilihan preset bertransisi halus dan menu **Atur ulang** kembali ke sudut preset aktif.
-- Jarak Tempel memakai offset `0.05` unit virtual MindAR, bukan ukuran sentimeter terkalibrasi. Kalibrasi 5 cm yang akurat memerlukan ukuran fisik marker yang diketahui.
+- **Preset sudut:** **Tempel** menempatkan karya sejajar marker; **45°** memiringkan karya dan menyesuaikan jarak angkat berdasarkan tinggi bidang serta posisi karya agar tidak menembus marker; **Bebas** membuka rotasi drag dan tombol arah 15° pada sumbu X/Y. Pilihan preset bertransisi halus dan menu **Atur ulang** kembali ke sudut preset aktif.
+- Jarak mode Tempel mengikuti posisi Z yang dikonfigurasi untuk karya dan memakai satuan virtual MindAR, bukan ukuran sentimeter terkalibrasi.
 - **Rekomendasi rotasi paling stabil:** gunakan tombol arah untuk penyetelan sudut kecil, lalu drag satu jari untuk melihat karya dari sudut bebas; tahan HP dengan kedua tangan atau sangga di permukaan agar tracking marker tidak ikut berguncang.
 
 ### 5. 🎛️ Menu Laci Melingkar Futuristik (*Futuristic Radial Menu Drawer*)
