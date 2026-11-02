@@ -9,44 +9,92 @@
   <style>
     body {
       margin: 0;
-      font-family: sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #111;
       color: white;
       overflow: hidden;
     }
 
-    #camera-status {
+    :root {
+      --glass-fill: rgba(15, 25, 39, .58);
+      --glass-line: rgba(225, 247, 255, .28);
+      --glass-shadow: 0 16px 48px rgba(0, 0, 0, .28);
+      --neon: #25efff;
+      --neon-soft: rgba(37, 239, 255, .28);
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    #app-header {
       position: fixed;
-      top: 16px;
+      top: max(14px, env(safe-area-inset-top));
       left: 50%;
+      z-index: 1250;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px 14px;
+      width: min(680px, calc(100vw - 28px));
+      padding: 9px 10px 9px 15px;
+      border: 1px solid var(--glass-line);
+      border-radius: 22px;
+      background: var(--glass-fill);
+      box-shadow: var(--glass-shadow), inset 0 1px rgba(255, 255, 255, .12);
+      backdrop-filter: blur(18px) saturate(1.3);
+      -webkit-backdrop-filter: blur(18px) saturate(1.3);
       transform: translateX(-50%);
-      z-index: 1200;
-      max-width: 90%;
-      padding: 10px 16px;
+    }
+
+    .brand-lockup, .header-actions, .header-status {
+      display: flex;
+      align-items: center;
+    }
+
+    .brand-lockup { gap: 11px; min-width: 0; }
+    .brand-mark {
+      color: var(--neon);
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -.12em;
+      line-height: 1;
+      text-shadow: 0 0 18px var(--neon-soft);
+    }
+    .brand-name { font-size: 14px; font-weight: 750; letter-spacing: .01em; }
+    .brand-subtitle { margin-top: 2px; color: rgba(241, 249, 255, .72); font-size: 10px; }
+    .header-actions { gap: 9px; }
+    .header-status { grid-column: 1 / -1; gap: 7px; min-width: 0; }
+
+    #camera-status {
+      min-width: 0;
+      padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.6);
-      font-size: 14px;
-      text-align: center;
+      background: rgba(0, 0, 0, .34);
+      color: rgba(248, 252, 255, .9);
+      font-size: 11px;
+      text-align: left;
       line-height: 1.4;
-      backdrop-filter: blur(4px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     #camera-status.error {
-      background: rgba(160, 25, 25, 0.8);
+      background: rgba(140, 27, 38, .82);
     }
 
     #camera-status.ready {
-      background: rgba(20, 110, 65, 0.82);
+      background: rgba(12, 104, 100, .76);
     }
 
     #camera-status.loading::before {
       content: "";
       display: inline-block;
-      width: 9px;
-      height: 9px;
-      margin-right: 9px;
+      width: 7px;
+      height: 7px;
+      margin-right: 7px;
       border: 2px solid rgba(255, 255, 255, 0.4);
-      border-top-color: white;
+      border-top-color: var(--neon);
       border-radius: 50%;
       vertical-align: -1px;
       animation: status-spin 0.8s linear infinite;
@@ -57,51 +105,80 @@
       inset: 0;
       z-index: 999;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 24px;
-      background: rgba(0, 0, 0, 0.22);
+      padding: clamp(112px, 17vh, 154px) 18px 150px;
+      background: transparent;
       pointer-events: none;
-      font-family: sans-serif;
     }
 
     #scan-guidance {
-      width: min(360px, 88vw);
-      padding: 22px 20px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 18px;
-      background: rgba(7, 15, 25, 0.84);
-      box-shadow: 0 14px 48px rgba(0, 0, 0, 0.35);
-      text-align: center;
-      backdrop-filter: blur(12px);
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      align-items: center;
+      gap: 0 11px;
+      width: min(360px, 90vw);
+      padding: 11px 15px;
+      border: 1px solid rgba(239, 251, 255, .34);
+      border-radius: 22px;
+      background: rgba(34, 43, 58, .54);
+      box-shadow: var(--glass-shadow), inset 0 1px rgba(255, 255, 255, .14);
+      text-align: left;
+      backdrop-filter: blur(16px) saturate(1.25);
+      -webkit-backdrop-filter: blur(16px) saturate(1.25);
       pointer-events: auto;
     }
 
+    #scan-guidance::before {
+      content: "⌖";
+      grid-row: 1 / span 2;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: rgba(19, 217, 232, .18);
+      color: var(--neon);
+      font-size: 24px;
+      box-shadow: 0 0 20px var(--neon-soft);
+    }
+
     #scan-guidance h1 {
-      margin: 0 0 8px;
-      font-size: 19px;
+      margin: 0 0 3px;
+      font-size: 13px;
+      font-weight: 700;
     }
 
     #scan-guidance p {
       margin: 0;
-      color: #c3d1df;
-      font-size: 14px;
-      line-height: 1.5;
+      color: rgba(239, 247, 255, .72);
+      font-size: 11px;
+      line-height: 1.35;
     }
 
     #retry-camera {
+      grid-column: 1 / -1;
       display: inline-flex;
-      margin: 16px auto 0;
-      padding: 10px 16px;
-      border: 1px solid #57d2d9;
-      border-radius: 10px;
-      background: #087f91;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-width: 210px;
+      min-height: 47px;
+      margin: 12px auto 0;
+      padding: 10px 22px;
+      border: 1px solid rgba(157, 255, 255, .9);
+      border-radius: 999px;
+      background: linear-gradient(135deg, #18d4e4, #0797b5);
       color: white;
-      font: inherit;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 750;
       cursor: pointer;
+      box-shadow: 0 0 22px rgba(0, 221, 245, .5), inset 0 1px rgba(255, 255, 255, .45);
+      transition: transform .18s ease, box-shadow .18s ease;
     }
 
+    #retry-camera::before { content: "◎"; font-size: 21px; line-height: 1; }
+    #retry-camera:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(0, 221, 245, .72); }
     #retry-camera:disabled {
       opacity: 0.65;
       cursor: wait;
@@ -116,179 +193,368 @@
     }
 
     #studio-sync-status {
-      position: fixed;
-      top: 62px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1200;
-      max-width: 90%;
-      padding: 6px 11px;
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.58);
-      color: #d5e5f2;
-      font-size: 11px;
+      max-width: 40vw;
+      padding: 5px 8px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .25);
+      color: rgba(232, 241, 252, .72);
+      font-size: 9px;
       text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     #gallery-button {
-      position: fixed;
-      top: max(108px, calc(env(safe-area-inset-top) + 86px));
-      right: max(14px, env(safe-area-inset-right));
-      z-index: 1250;
-      padding: 11px 15px;
-      border: 1px solid rgba(91, 203, 255, 0.8);
-      border-radius: 12px;
-      background: rgba(0, 30, 74, 0.88);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 45px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, .28);
+      border-radius: 16px;
+      background: rgba(231, 244, 255, .12);
       color: white;
-      font: inherit;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
-      box-shadow: 0 0 14px rgba(0, 153, 255, 0.45);
       cursor: pointer;
+      box-shadow: inset 0 1px rgba(255, 255, 255, .16), 0 5px 20px rgba(0, 0, 0, .14);
+    }
+
+    .gallery-icon { width: 20px; height: 20px; flex: 0 0 auto; }
+    #gallery-button:hover { border-color: var(--neon); background: rgba(37, 239, 255, .18); }
+
+    #gallery-dock {
+      position: fixed;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      left: 50%;
+      z-index: 1250;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) 28px;
+      align-items: center;
+      gap: 8px;
+      width: min(620px, calc(100vw - 30px));
+      padding: 10px 11px;
+      border: 1px solid rgba(245, 251, 255, .32);
+      border-radius: 28px;
+      background: rgba(36, 45, 59, .54);
+      box-shadow: var(--glass-shadow), inset 0 1px rgba(255, 255, 255, .15);
+      backdrop-filter: blur(18px) saturate(1.3);
+      -webkit-backdrop-filter: blur(18px) saturate(1.3);
+      transform: translateX(-50%);
+    }
+
+    .dock-arrow, #gallery-dock-handle {
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, .2);
+      background: rgba(255, 255, 255, .12);
+      color: white;
+      cursor: pointer;
+    }
+    .dock-arrow { width: 30px; height: 38px; border-radius: 15px; font-size: 20px; }
+    #gallery-thumbnails {
+      display: flex;
+      gap: 8px;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      scroll-behavior: smooth;
+    }
+    #gallery-thumbnails::-webkit-scrollbar { display: none; }
+    .gallery-thumbnail {
+      position: relative;
+      flex: 0 0 62px;
+      width: 62px;
+      height: 62px;
+      padding: 3px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .34);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, .14);
+      cursor: pointer;
+    }
+    .gallery-thumbnail img { width: 100%; height: 100%; border-radius: 9px; object-fit: cover; }
+    .gallery-thumbnail[aria-current="true"] {
+      border: 2px solid var(--neon);
+      box-shadow: 0 0 18px rgba(37, 239, 255, .68);
+    }
+    #gallery-dock-handle {
+      position: absolute;
+      top: -19px;
+      left: 50%;
+      width: 54px;
+      height: 22px;
+      border-bottom: 0;
+      border-radius: 16px 16px 0 0;
+      background: rgba(36, 45, 59, .72);
+      font-size: 18px;
+      transform: translateX(-50%);
     }
 
     #gallery-dialog {
       width: min(760px, calc(100vw - 24px));
       max-width: none;
-      max-height: min(86vh, 820px);
+      max-height: min(88dvh, 820px);
       padding: 0;
       overflow: hidden;
-      border: 1px solid rgba(91, 203, 255, 0.55);
-      border-radius: 20px;
-      background: #071321;
+      border: 1px solid rgba(239, 250, 255, .34);
+      border-radius: 28px;
+      background: rgba(28, 38, 51, .79);
       color: #f3f8ff;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .48), inset 0 1px rgba(255, 255, 255, .14);
+      backdrop-filter: blur(26px) saturate(1.4);
+      -webkit-backdrop-filter: blur(26px) saturate(1.4);
     }
 
     #gallery-dialog::backdrop {
-      background: rgba(0, 5, 14, 0.78);
-      backdrop-filter: blur(5px);
+      background: rgba(3, 10, 19, .45);
+      backdrop-filter: blur(9px);
     }
 
     .gallery-content {
       display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr);
-      max-height: min(86vh, 820px);
-      padding: 20px;
+      grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+      max-height: min(88dvh, 820px);
+      padding: 18px;
+    }
+
+    .gallery-grab-handle {
+      width: 48px;
+      height: 4px;
+      margin: -7px auto 14px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, .65);
     }
 
     .gallery-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
+      margin-bottom: 14px;
     }
 
+    .gallery-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .gallery-heading-icon {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, .12);
+      color: var(--neon);
+    }
     .gallery-header h2 {
-      margin: 0 0 6px;
-      font-size: 21px;
+      margin: 0 0 3px;
+      font-size: 16px;
     }
 
     .gallery-header p {
-      margin: 0 0 16px;
-      color: #a9bdd2;
-      font-size: 13px;
+      margin: 0;
+      color: rgba(244, 248, 255, .72);
+      font-size: 11px;
       line-height: 1.5;
     }
 
     #gallery-close {
       flex: 0 0 auto;
-      width: 40px;
-      height: 40px;
-      border: 1px solid #34506f;
-      border-radius: 11px;
-      background: #14253a;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .12);
       color: white;
-      font-size: 22px;
+      font-size: 20px;
       cursor: pointer;
     }
 
     #gallery-search {
       width: 100%;
-      margin-bottom: 14px;
-      padding: 11px 13px;
-      border: 1px solid #30445d;
-      border-radius: 10px;
-      background: #0b1b2c;
+      min-height: 44px;
+      margin-bottom: 10px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 255, 255, .17);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .13);
       color: white;
-      font: inherit;
+      font-size: 12px;
+      outline: none;
     }
+    #gallery-search::placeholder { color: rgba(246, 249, 255, .62); }
+    #gallery-search:focus { border-color: rgba(37, 239, 255, .8); box-shadow: 0 0 0 3px rgba(37, 239, 255, .12); }
 
     #gallery-search:focus-visible,
     #gallery-close:focus-visible,
     #gallery-list button:focus-visible,
-    #gallery-button:focus-visible {
-      outline: 2px solid #72e5e9;
+    #gallery-button:focus-visible,
+    #gallery-dock button:focus-visible,
+    .gallery-filter:focus-visible,
+    #gallery-confirm:focus-visible {
+      outline: 2px solid var(--neon);
       outline-offset: 2px;
+    }
+
+    #gallery-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 11px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    #gallery-filters::-webkit-scrollbar { display: none; }
+    .gallery-filter {
+      flex: 0 0 auto;
+      min-height: 33px;
+      padding: 7px 13px;
+      border: 1px solid rgba(255, 255, 255, .15);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .09);
+      color: rgba(248, 250, 255, .86);
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .gallery-filter[aria-pressed="true"] {
+      border-color: rgba(145, 255, 255, .9);
+      background: linear-gradient(135deg, #39edf2, #0baec5);
+      color: #052633;
+      font-weight: 800;
+      box-shadow: 0 0 18px rgba(37, 239, 255, .32);
     }
 
     #gallery-list {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-      gap: 12px;
-      max-height: 56vh;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: start;
+      gap: 10px;
+      min-height: 0;
+      max-height: 54dvh;
       overflow: auto;
-      padding: 2px 3px 4px 0;
+      padding: 1px 3px 4px 0;
       overscroll-behavior: contain;
     }
 
     .gallery-card {
+      position: relative;
       display: grid;
-      grid-template-rows: 130px auto auto;
+      grid-template-rows: clamp(102px, 28vw, 142px) auto;
       align-content: start;
-      gap: 8px;
-      padding: 9px;
-      border: 1px solid #243b55;
-      border-radius: 13px;
-      background: #0c1a29;
+      min-width: 0;
+      min-height: 145px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .36);
+      border-radius: 16px;
+      background: rgba(10, 19, 32, .42);
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
 
     .gallery-card[hidden] { display: none; }
+    .gallery-card.selected {
+      border-color: var(--neon);
+      box-shadow: 0 0 0 1px var(--neon), 0 0 20px rgba(37, 239, 255, .25);
+    }
 
     .gallery-card img {
+      display: block;
       width: 100%;
-      height: 130px;
-      border-radius: 8px;
-      background: #14253a;
+      height: 100%;
+      background: rgba(255, 255, 255, .08);
       object-fit: contain;
+      cursor: pointer;
     }
 
     .gallery-card h3 {
-      display: -webkit-box;
-      min-height: 36px;
-      margin: 0;
+      margin: 8px 9px 1px;
       overflow: hidden;
-      color: #eaf5ff;
-      font-size: 13px;
-      line-height: 1.4;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
+      color: #f5f8ff;
+      font-size: 11px;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .gallery-card button {
-      min-height: 38px;
-      border: 1px solid #138da2;
-      border-radius: 9px;
-      background: #087f91;
+      position: absolute;
+      top: 9px;
+      right: 9px;
+      display: grid;
+      place-items: center;
+      width: 29px;
+      height: 29px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, .58);
+      border-radius: 50%;
+      background: rgba(14, 26, 40, .65);
       color: white;
-      font: inherit;
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 14px;
       cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .gallery-card.selected button {
+      border-color: var(--neon);
+      background: #18cbd8;
+      color: #04242b;
     }
 
     #gallery-empty {
       grid-column: 1 / -1;
       padding: 28px 12px;
-      color: #a9bdd2;
+      color: rgba(244, 248, 255, .76);
       text-align: center;
     }
 
+    .gallery-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 12px;
+    }
+    .gallery-count { display: grid; gap: 3px; min-width: 0; color: rgba(245, 248, 255, .78); font-size: 10px; }
+    #gallery-selection-label { max-width: 42vw; overflow: hidden; color: rgba(245, 248, 255, .55); text-overflow: ellipsis; white-space: nowrap; }
+    #gallery-confirm {
+      min-width: 128px;
+      min-height: 43px;
+      padding: 9px 18px;
+      border: 1px solid rgba(161, 255, 255, .82);
+      border-radius: 999px;
+      background: linear-gradient(135deg, #35e9ed, #0aaec4);
+      color: #032833;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(37, 239, 255, .32);
+    }
+    #gallery-confirm:disabled { opacity: .48; cursor: not-allowed; box-shadow: none; }
+
     @media (max-width: 430px) {
-      .gallery-content { padding: 16px; }
-      #gallery-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
-      .gallery-card { grid-template-rows: 110px auto auto; padding: 7px; }
-      .gallery-card img { height: 110px; }
+      #app-header { width: calc(100vw - 24px); padding: 8px 8px 8px 12px; border-radius: 19px; }
+      .brand-mark { font-size: 27px; }
+      .brand-lockup { gap: 8px; }
+      .header-actions { gap: 5px; }
+      #gallery-button { min-height: 40px; padding: 7px 10px; gap: 6px; font-size: 11px; }
+      #studio-sync-status { max-width: 35vw; font-size: 8px; }
+      #scanning-overlay { padding-top: clamp(124px, 18vh, 160px); }
+      #scan-guidance { width: min(340px, calc(100vw - 46px)); }
+      #gallery-dialog { width: calc(100vw - 22px); max-height: min(88dvh, 820px); border-radius: 25px; }
+      .gallery-content { max-height: min(88dvh, 820px); padding: 15px; }
+      #gallery-list { gap: 8px; max-height: 55dvh; }
+      .gallery-card { grid-template-rows: clamp(96px, 29vw, 126px) auto; }
+      .gallery-card h3 { margin: 7px 8px 9px; font-size: 10px; }
+      .gallery-card button { top: 7px; right: 7px; }
+      #gallery-dock { width: calc(100vw - 34px); grid-template-columns: 25px minmax(0, 1fr) 25px; gap: 6px; padding: 8px; }
+      .gallery-thumbnail { flex-basis: 54px; width: 54px; height: 54px; }
+      .dock-arrow { width: 27px; height: 36px; }
+      #rotation-controller { transform: scale(.88); transform-origin: bottom right; }
+    }
+
+    @media (max-height: 640px) {
+      #gallery-dialog, .gallery-content { max-height: 92dvh; }
+      #gallery-list { max-height: 46dvh; }
+      #gallery-dock { bottom: max(10px, env(safe-area-inset-bottom)); }
+      #scanning-overlay { padding-top: 112px; }
     }
 
     #target-indicator {
@@ -302,12 +568,12 @@
     }
 
     #target-indicator polygon {
-      fill: rgba(255, 215, 65, 0.06);
-      stroke: rgba(255, 215, 65, 0.95);
+      fill: rgba(37, 239, 255, 0.04);
+      stroke: rgba(37, 239, 255, 0.95);
       stroke-width: 5;
       vector-effect: non-scaling-stroke;
       stroke-linejoin: round;
-      filter: drop-shadow(0 0 7px rgba(255, 215, 65, 0.75));
+      filter: drop-shadow(0 0 8px rgba(37, 239, 255, 0.78));
     }
 
     #target-indicator.active {
@@ -638,24 +904,71 @@
 </head>
 <body>
 
-  <div id="camera-status" class="loading" role="status" aria-live="polite">Memeriksa kamera...</div>
-  <div id="studio-sync-status" role="status" aria-live="polite">Memeriksa katalog Studio...</div>
-  <button id="gallery-button" type="button" aria-haspopup="dialog" aria-controls="gallery-dialog">Galeri gambar</button>
+  <header id="app-header">
+    <div class="brand-lockup" aria-label="AR Scan 2.5D Parallax">
+      <span class="brand-mark" aria-hidden="true">AR</span>
+      <span>
+        <span class="brand-name">AR Scan</span>
+        <span class="brand-subtitle">2.5D Parallax</span>
+      </span>
+    </div>
+    <div class="header-actions">
+      <div id="studio-sync-status" role="status" aria-live="polite">Memeriksa katalog...</div>
+      <button id="gallery-button" type="button" aria-haspopup="dialog" aria-controls="gallery-dialog">
+        <svg class="gallery-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9M4 8h13M7 4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="m3.5 18 5.2-5.3 3.2 3.1 2.3-2.2 6.3 6H5a1.5 1.5 0 0 1-1.5-1.6Z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        </svg>
+        Galeri
+      </button>
+    </div>
+    <div class="header-status">
+      <div id="camera-status" class="loading" role="status" aria-live="polite">Memeriksa kamera...</div>
+    </div>
+  </header>
   <dialog id="gallery-dialog" aria-labelledby="gallery-title">
     <div class="gallery-content">
+      <div class="gallery-grab-handle" aria-hidden="true"></div>
       <header class="gallery-header">
-        <div>
-          <h2 id="gallery-title">Galeri gambar yang bisa dipindai</h2>
-          <p id="gallery-description">Memuat daftar marker yang tersedia...</p>
+        <div class="gallery-heading">
+          <span class="gallery-heading-icon" aria-hidden="true">
+            <svg class="gallery-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9M4 8h13M7 4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="m3.5 18 5.2-5.3 3.2 3.1 2.3-2.2 6.3 6H5a1.5 1.5 0 0 1-1.5-1.6Z" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>
+            <h2 id="gallery-title">Galeri Marker</h2>
+            <p id="gallery-description">Memuat daftar marker yang tersedia...</p>
+          </span>
         </div>
         <button id="gallery-close" type="button" aria-label="Tutup galeri">×</button>
       </header>
-      <input id="gallery-search" type="search" placeholder="Cari nama karya..." aria-label="Cari gambar di galeri">
+      <input id="gallery-search" type="search" placeholder="⌕   Cari gambar..." aria-label="Cari gambar di galeri">
+      <nav id="gallery-filters" aria-label="Filter kelompok marker">
+        <button class="gallery-filter" type="button" data-range="all" aria-pressed="true">Semua</button>
+        <button class="gallery-filter" type="button" data-range="0-9" aria-pressed="false">00–09</button>
+        <button class="gallery-filter" type="button" data-range="10-19" aria-pressed="false">10–19</button>
+        <button class="gallery-filter" type="button" data-range="20-999" aria-pressed="false">20+</button>
+      </nav>
       <div id="gallery-list" aria-live="polite">
         <p id="gallery-empty">Memuat gambar...</p>
       </div>
+      <footer class="gallery-footer">
+        <span class="gallery-count">
+          <span id="gallery-total">0 gambar</span>
+          <span id="gallery-selection-label">Pilih gambar</span>
+        </span>
+        <button id="gallery-confirm" type="button" disabled>Pilih</button>
+      </footer>
     </div>
   </dialog>
+  <nav id="gallery-dock" aria-label="Pilihan cepat gambar">
+    <button class="dock-arrow" id="gallery-dock-previous" type="button" aria-label="Gambar sebelumnya">‹</button>
+    <div id="gallery-thumbnails"></div>
+    <button class="dock-arrow" id="gallery-dock-next" type="button" aria-label="Gambar berikutnya">›</button>
+    <button id="gallery-dock-handle" type="button" aria-label="Buka galeri lengkap">⌃</button>
+  </nav>
   <svg id="target-indicator" class="inactive" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
     <polygon id="target-indicator-shape" points="0,0 0,0 0,0 0,0"></polygon>
   </svg>
@@ -728,9 +1041,13 @@
     const galleryDialog = document.getElementById('gallery-dialog');
     const galleryList = document.getElementById('gallery-list');
     const gallerySearch = document.getElementById('gallery-search');
+    const galleryConfirm = document.getElementById('gallery-confirm');
+    const galleryFilters = document.getElementById('gallery-filters');
+    const galleryThumbnails = document.getElementById('gallery-thumbnails');
     let scannerStarted = false;
     let scannerStarting = false;
     let requestedTargetName = '';
+    let selectedTargetIndex = null;
     let targets = [];
     let activeTarget = null;
     let activeTargetImage = null;
@@ -800,6 +1117,67 @@
       retryCameraButton.classList.toggle('visible', retry);
     }
 
+    function setSelectedGalleryTarget(targetIndex) {
+      const target = document.getElementById(`image-target-${targetIndex}`);
+      if (!target) {
+        console.error(`Marker index ${targetIndex} tidak ditemukan di scene AR.`);
+        return false;
+      }
+      selectedTargetIndex = Number(targetIndex);
+      galleryList.querySelectorAll('.gallery-card').forEach(card => {
+        const selected = Number(card.dataset.targetIndex) === selectedTargetIndex;
+        card.classList.toggle('selected', selected);
+        const button = card.querySelector('button[data-target-index]');
+        if (button) {
+          button.textContent = selected ? '✓' : '＋';
+          button.setAttribute('aria-label', `${selected ? 'Terpilih' : 'Pilih'} ${card.dataset.searchText}`);
+          button.setAttribute('aria-pressed', String(selected));
+        }
+      });
+      galleryThumbnails.querySelectorAll('.gallery-thumbnail').forEach(button => {
+        const selected = Number(button.dataset.targetIndex) === selectedTargetIndex;
+        button.setAttribute('aria-current', String(selected));
+      });
+      const visibleCount = Array.from(galleryList.querySelectorAll('.gallery-card'))
+        .filter(card => !card.hidden).length;
+      document.getElementById('gallery-total').textContent = `${visibleCount} gambar`;
+      document.getElementById('gallery-selection-label').textContent = target.dataset.targetName || 'Marker terpilih';
+      galleryConfirm.disabled = false;
+      return true;
+    }
+
+    function chooseGalleryTarget(targetIndex) {
+      if (!setSelectedGalleryTarget(targetIndex)) return;
+      const target = document.getElementById(`image-target-${targetIndex}`);
+      requestedTargetName = target.dataset.targetName || 'marker pilihan';
+      galleryDialog.close();
+      const overlay = document.getElementById('scanning-overlay');
+      if (overlay) overlay.style.display = 'flex';
+      setCameraStatus(scannerStarted ? `Mencari: ${requestedTargetName}` : 'Kamera siap untuk memindai.', 'ready');
+      setScanGuidance(`Pindai: ${requestedTargetName}`, 'Arahkan kamera ke gambar yang dipilih, tampilkan seluruh marker, lalu tahan kamera tetap stabil.');
+      if (!scannerStarted && !scannerStarting) startAR(requestedTargetName);
+    }
+
+    function filterGallery() {
+      const query = gallerySearch.value.trim().toLocaleLowerCase('id');
+      const activeFilter = galleryFilters.querySelector('[aria-pressed="true"]');
+      const range = activeFilter?.dataset.range || 'all';
+      const [minimum, maximum] = range === 'all' ? [0, Infinity] : range.split('-').map(Number);
+      let visibleCount = 0;
+      galleryList.querySelectorAll('.gallery-card').forEach(card => {
+        const index = Number(card.dataset.targetIndex);
+        const matches = card.dataset.searchText.includes(query) && index >= minimum && index <= maximum;
+        card.hidden = !matches;
+        if (matches) visibleCount += 1;
+      });
+      const empty = galleryList.querySelector('#gallery-empty');
+      if (empty) {
+        empty.textContent = visibleCount ? '' : 'Tidak ada gambar yang cocok dengan pilihan ini.';
+        empty.hidden = visibleCount > 0;
+      }
+      document.getElementById('gallery-total').textContent = `${visibleCount} gambar`;
+    }
+
     function stopAdaptiveScanGuidance() {
       window.clearTimeout(scanGuidanceTimer);
       scanGuidanceTimer = null;
@@ -845,7 +1223,7 @@
     function getSmallGuidePoints() {
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
-      const size = Math.min(44, window.innerWidth * 0.14, window.innerHeight * 0.08);
+      const size = Math.min(288, window.innerWidth * 0.72, window.innerHeight * 0.34);
       const half = size / 2;
       return [
         { x: centerX - half, y: centerY - half },
@@ -1349,6 +1727,10 @@
       galleryDialog.showModal();
       gallerySearch.focus();
     });
+    document.getElementById('gallery-dock-handle').addEventListener('click', () => {
+      galleryDialog.showModal();
+      gallerySearch.focus();
+    });
     document.getElementById('gallery-close').addEventListener('click', () => galleryDialog.close());
     galleryDialog.addEventListener('click', event => {
       if (event.target === galleryDialog) galleryDialog.close();
@@ -1358,31 +1740,33 @@
         ? event.target.closest('button[data-target-index]')
         : null;
       if (!button) return;
-      const target = document.getElementById(`image-target-${button.dataset.targetIndex}`);
-      if (!target) {
-        console.error(`Marker index ${button.dataset.targetIndex} tidak ditemukan di scene AR.`);
-        return;
-      }
-      requestedTargetName = target.dataset.targetName || 'marker pilihan';
-      galleryDialog.close();
-      setScanGuidance(`Pindai: ${requestedTargetName}`, 'Arahkan kamera ke gambar marker yang dipilih, tampilkan seluruh gambar, lalu tahan kamera tetap stabil.');
-      if (!scannerStarted && !scannerStarting) {
-        startAR(requestedTargetName);
-      }
+      setSelectedGalleryTarget(button.dataset.targetIndex);
     });
-    gallerySearch.addEventListener('input', () => {
-      const query = gallerySearch.value.trim().toLocaleLowerCase('id');
-      let visibleCount = 0;
-      galleryList.querySelectorAll('.gallery-card').forEach(card => {
-        const matches = card.dataset.searchText.includes(query);
-        card.hidden = !matches;
-        if (matches) visibleCount += 1;
+    galleryConfirm.addEventListener('click', () => {
+      if (selectedTargetIndex !== null) chooseGalleryTarget(selectedTargetIndex);
+    });
+    gallerySearch.addEventListener('input', filterGallery);
+    galleryFilters.addEventListener('click', event => {
+      const button = event.target instanceof Element
+        ? event.target.closest('button[data-range]')
+        : null;
+      if (!button) return;
+      galleryFilters.querySelectorAll('.gallery-filter').forEach(filter => {
+        filter.setAttribute('aria-pressed', String(filter === button));
       });
-      const empty = galleryList.querySelector('#gallery-empty');
-      if (empty) {
-        empty.textContent = visibleCount ? '' : 'Tidak ada gambar yang cocok dengan pencarian.';
-        empty.hidden = visibleCount > 0;
-      }
+      filterGallery();
+    });
+    galleryThumbnails.addEventListener('click', event => {
+      const button = event.target instanceof Element
+        ? event.target.closest('button[data-target-index]')
+        : null;
+      if (button) chooseGalleryTarget(button.dataset.targetIndex);
+    });
+    document.getElementById('gallery-dock-previous').addEventListener('click', () => {
+      galleryThumbnails.scrollBy({ left: -150, behavior: 'smooth' });
+    });
+    document.getElementById('gallery-dock-next').addEventListener('click', () => {
+      galleryThumbnails.scrollBy({ left: 150, behavior: 'smooth' });
     });
 
     drawerButton.addEventListener('click', () => {
@@ -1512,6 +1896,7 @@
         const video = target.querySelector('video');
         if (video) video.play().catch(error => console.warn('Autoplay video AR diblokir:', error));
         targetVisible = true;
+        setSelectedGalleryTarget(target.id.replace('image-target-', ''));
         setPoseMode('attached', { animate: false, showHint: false });
         updateImageVisibility();
         if (imageEnabled) animateImageIn();
@@ -1571,6 +1956,9 @@
       });
     });
 
+    if (targets.length) {
+      setSelectedGalleryTarget(targets[0].id.replace('image-target-', ''));
+    }
     updateDrawerWheel();
     resetScanGuide();
     retryCameraButton.addEventListener('click', startAR);
@@ -1612,6 +2000,7 @@
   </script>
   <script type="module">
     import { AR_TARGETS } from './ar-targets.js';
+    import { isSupabaseConfigured } from './supabase-client.js';
     import { getMindFile, getTargets } from './studio-storage.js';
 
     const scene = document.querySelector('a-scene');
@@ -1619,13 +2008,16 @@
     const galleryList = document.getElementById('gallery-list');
     const galleryEmpty = document.getElementById('gallery-empty');
     const galleryDescription = document.getElementById('gallery-description');
+    const galleryThumbnails = document.getElementById('gallery-thumbnails');
 
     function renderGallery(items) {
       galleryList.querySelectorAll('.gallery-card').forEach(card => card.remove());
+      galleryThumbnails.replaceChildren();
       items.forEach(item => {
         const card = document.createElement('article');
         card.className = 'gallery-card';
         card.dataset.searchText = item.name.toLocaleLowerCase('id');
+        card.dataset.targetIndex = String(item.targetIndex);
         const image = document.createElement('img');
         image.src = item.markerUrl;
         image.alt = `Marker untuk dipindai: ${item.name}`;
@@ -1634,15 +2026,31 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.dataset.targetIndex = String(item.targetIndex);
-        button.textContent = 'Pilih untuk dipindai';
+        button.textContent = '＋';
+        button.setAttribute('aria-label', `Pilih ${item.name}`);
+        button.setAttribute('aria-pressed', 'false');
         card.append(image, title, button);
         galleryList.append(card);
+
+        const thumbnail = document.createElement('button');
+        thumbnail.className = 'gallery-thumbnail';
+        thumbnail.type = 'button';
+        thumbnail.dataset.targetIndex = String(item.targetIndex);
+        thumbnail.setAttribute('aria-label', `Pindai ${item.name}`);
+        thumbnail.setAttribute('aria-current', 'false');
+        const thumbnailImage = document.createElement('img');
+        thumbnailImage.src = item.markerUrl;
+        thumbnailImage.alt = '';
+        thumbnail.append(thumbnailImage);
+        galleryThumbnails.append(thumbnail);
       });
       galleryEmpty.hidden = items.length > 0;
       galleryEmpty.textContent = items.length
         ? ''
         : 'Belum ada marker aktif di katalog ini.';
       galleryDescription.textContent = `${items.length} marker siap dipindai. Pilih marker, lalu arahkan kamera ke gambar yang sama.`;
+      document.getElementById('gallery-total').textContent = `${items.length} gambar`;
+      document.getElementById('gallery-confirm').disabled = items.length === 0;
     }
 
     function setParallaxProfile(target, values) {
@@ -1753,7 +2161,7 @@
     }
 
     async function loadStudioTargets() {
-      const records = (await getTargets())
+      const records = (await getTargets({ includeBlobs: false }))
         .filter(record => record.enabled)
         .sort((left, right) => left.target_index - right.target_index);
       if (!records.length) {
@@ -1767,7 +2175,9 @@
         if (!Number.isInteger(record.target_index) || record.target_index < 0 || indices.has(record.target_index)) {
           throw new Error('Index target Studio tidak valid atau duplikat.');
         }
-        if (!['image', 'video'].includes(record.content_type) || !record.marker_blob || !record.content_blob) {
+        if (!['image', 'video'].includes(record.content_type) ||
+            (!record.marker_blob && !record._marker_url) ||
+            (!record.content_blob && !record._content_url)) {
           throw new Error(`Data karya "${record.title}" tidak lengkap.`);
         }
         indices.add(record.target_index);
@@ -1782,8 +2192,13 @@
         `imageTargetSrc: ${mindFile?.file ? URL.createObjectURL(mindFile.file) : 'targets.mind'}; autoStart: false; uiScanning: #scanning-overlay;`
       );
       const galleryItems = records.map(record => {
-        const markerUrl = URL.createObjectURL(record.marker_blob);
-        addTarget(record, markerUrl, URL.createObjectURL(record.content_blob));
+        const markerUrl = record.marker_blob
+          ? URL.createObjectURL(record.marker_blob)
+          : record._marker_url;
+        const contentUrl = record.content_blob
+          ? URL.createObjectURL(record.content_blob)
+          : record._content_url;
+        addTarget(record, markerUrl, contentUrl);
         return {
           targetIndex: record.target_index,
           name: record.title,
@@ -1791,15 +2206,21 @@
         };
       });
       renderGallery(galleryItems);
-      syncStatus.textContent = `Studio lokal · ${records.length} karya di browser ini`;
+      syncStatus.textContent = isSupabaseConfigured
+        ? `Katalog publik · ${records.length} karya aktif`
+        : `Studio lokal · ${records.length} karya di browser ini`;
     }
 
     try {
       await loadStudioTargets();
     } catch (error) {
-      syncStatus.textContent = 'Data Studio lokal gagal dimuat. Periksa penyimpanan browser.';
+      syncStatus.textContent = isSupabaseConfigured
+        ? 'Katalog publik gagal dimuat. Periksa koneksi dan konfigurasi backend.'
+        : 'Data Studio lokal gagal dimuat. Periksa penyimpanan browser.';
       document.getElementById('gallery-empty').hidden = false;
-      document.getElementById('gallery-empty').textContent = 'Galeri gagal dimuat. Periksa katalog Studio dan muat ulang halaman.';
+      document.getElementById('gallery-empty').textContent = isSupabaseConfigured
+        ? 'Galeri gagal dimuat dari backend. Periksa koneksi lalu muat ulang halaman.'
+        : 'Galeri gagal dimuat. Periksa katalog Studio dan muat ulang halaman.';
       document.getElementById('gallery-description').textContent = 'Daftar marker tidak dapat dimuat.';
       console.error('Gagal memuat konten Studio:', error);
     }

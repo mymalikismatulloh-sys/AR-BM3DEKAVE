@@ -62,9 +62,10 @@ f:\Project AR NEW/
 ├── ar-targets.js               # Daftar target bawaan, karya, dan profil parallax
 ├── targets.mind                # File kompilasi target marker yang dibaca oleh MindAR
 ├── studio.html                 # Editor karya tanpa login (mode lokal)
-├── studio.js                   # Operasi Studio Editor lokal
-├── studio-storage.js           # Penyimpanan browser menggunakan IndexedDB
-├── supabase-config.js          # Konfigurasi opsional Supabase untuk integrasi berikutnya
+├── studio.js                   # Operasi Studio Editor dan login admin
+├── studio-storage.js           # Penyimpanan lokal atau sinkronisasi Supabase
+├── supabase-client.js          # Klien REST Supabase dengan sesi admin
+├── supabase-config.js          # URL proyek dan public anon key Supabase
 ├── supabase/
 │   └── schema.sql              # Tabel, Storage bucket, dan kebijakan RLS
 ├── package.json                # Konfigurasi proyek dan referensi repositori Git
@@ -160,18 +161,24 @@ Setiap karya dirender pada plane dua sisi (*double-sided*) agar tetap terlihat s
 
 ---
 
-## 🧰 Studio Editor tanpa login (mode lokal)
+## 🧰 Katalog publik dan Studio Editor admin
 
-Editor tersedia di [studio.html](studio.html) dan saat ini **tidak memerlukan login**. Editor dapat menambah, mengubah, menghapus, dan menonaktifkan karya; menerima gambar marker serta konten gambar/video; mengatur ukuran dan posisi bidang AR; serta menyimpan file `.mind`. Data dan file disimpan di IndexedDB browser, lalu dapat dibaca oleh halaman AR pada browser dan origin yang sama.
+Halaman AR membaca karya aktif dari Supabase agar perubahan yang diterbitkan dapat dilihat semua pengunjung. Halaman [studio.html](studio.html) hanya mengizinkan admin terdaftar untuk menambah, mengubah, menghapus, atau menerbitkan file tracking. Pengunjung umum hanya memiliki akses baca; aturan Row Level Security (RLS) dan kebijakan Storage ditetapkan di [supabase/schema.sql](supabase/schema.sql).
 
-**Mode ini bersifat lokal, bukan publik:** data hanya ada di profil browser/perangkat yang mengedit. Tidak disinkronkan ke pengunjung lain atau browser berbeda, dan menghapus data situs/browser dapat menghapus konten Studio. Ini menghindari pembukaan akses tulis publik saat autentikasi backend belum dikonfigurasi.
+### Menyiapkan backend bersama
+1. Buat proyek Supabase dan jalankan seluruh [supabase/schema.sql](supabase/schema.sql) sekali melalui SQL Editor.
+2. Pada Authentication, buat akun admin dengan email dan kata sandi yang kuat. Nonaktifkan pendaftaran publik jika tidak dibutuhkan.
+3. Ambil UUID akun dari **Authentication → Users**, lalu daftarkan sebagai admin melalui SQL Editor:
+   ```sql
+   insert into public.studio_admins (user_id)
+   values ('UUID-USER-ADMIN');
+   ```
+4. Salin **Project URL** dan **publishable/anon key** Supabase ke [supabase-config.js](supabase-config.js). Key publik boleh berada di frontend; jangan pernah menaruh `service_role` key atau kata sandi admin di repository.
+5. Publikasikan ulang situs. Masuk ke `/studio.html` dengan akun admin untuk mengelola katalog. Pengunjung halaman utama dapat membaca karya aktif tanpa login.
 
-- Jalankan aplikasi melalui server lokal (`python -m http.server 8080`) dan buka `/studio.html`.
-- Nomor **Index marker** harus sama dengan urutan gambar di file `targets.mind`. Untuk marker baru atau susunan berubah, kompilasi ulang semua marker melalui [MindAR Image Compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile), lalu unggah `.mind` pada editor.
-- Gambar marker adalah gambar fisik yang dipindai; konten AR mendukung gambar atau video. Ukuran bidang dan posisi X/Y/Z menggunakan satuan A-Frame.
-- File marker, konten, dan tracking dibatasi hingga 50 MB per file.
+Jika Supabase belum dikonfigurasi, Studio tetap menggunakan IndexedDB lokal dan perubahan hanya tersedia di browser tersebut. Setelah konfigurasi tersedia, operasi baca/tulis publik tidak diam-diam beralih ke salinan lokal apabila backend gagal.
 
-Sinkronisasi lintas pengguna dapat diaktifkan kembali setelah backend dan autentikasi admin disiapkan. [supabase/schema.sql](supabase/schema.sql) tetap tersedia sebagai fondasi konfigurasi server; jangan membuat kebijakan tulis publik atau menaruh `service_role` key dalam frontend.
+Nomor **Index marker** harus sama dengan urutan gambar di file `targets.mind`. Untuk marker baru atau susunan berubah, kompilasi ulang marker melalui [MindAR Image Compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile), lalu terbitkan file `.mind` dari Studio. Gambar marker adalah gambar fisik yang dipindai; konten AR mendukung gambar atau video. Ukuran bidang dan posisi X/Y/Z memakai satuan A-Frame. File marker, konten, dan tracking dibatasi hingga 50 MB per file.
 
 ---
 

@@ -93,8 +93,19 @@
       <a class="button-link" href="./index.html">← Kembali ke AR</a>
     </header>
 
-    <p class="panel field-note" style="margin-bottom: 18px">Mode lokal tanpa login: data dan file hanya tersimpan di browser/perangkat ini. Belum disinkronkan atau dipublikasikan ke pengunjung lain.</p>
-    <section id="studio-panel">
+    <p id="studio-mode-note" class="panel field-note" style="margin-bottom: 18px">Mode lokal tanpa login: data dan file hanya tersimpan di browser/perangkat ini. Belum disinkronkan atau dipublikasikan ke pengunjung lain.</p>
+    <section id="auth-panel" class="panel login-panel hidden">
+      <h2 id="auth-title">Masuk sebagai admin</h2>
+      <p id="auth-description" class="field-note">Masuk untuk mengelola karya yang tampil bagi semua pengunjung.</p>
+      <form id="auth-form" class="stack">
+        <label>Email admin<input id="admin-email" type="email" autocomplete="username" required></label>
+        <label>Kata sandi<input id="admin-password" type="password" autocomplete="current-password" required></label>
+        <button id="auth-submit" class="primary" type="submit">Masuk</button>
+        <div id="auth-status" class="status" role="status" aria-live="polite"></div>
+      </form>
+      <button id="sign-out-button" class="hidden" type="button">Keluar dari akun admin</button>
+    </section>
+    <section id="studio-panel" class="hidden">
       <div class="workspace">
         <section class="panel">
           <div class="toolbar">

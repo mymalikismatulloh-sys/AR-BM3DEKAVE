@@ -19,4 +19,4 @@ Buka browser di: [http://localhost:8080](http://localhost:8080)
 Untuk panduan arsitektur, daftar marker, fitur interaksi, panduan HP, hingga cara compile marker baru, silakan baca dokumentasi lengkap di:
 👉 **[DOKUMENTASI.md](./DOKUMENTASI.md)**
 
-**Studio Editor tanpa login** tersedia di `/studio.html`. Data disimpan hanya di browser/perangkat yang digunakan; untuk sinkronisasi bersama diperlukan backend dengan autentikasi admin.
+**Studio Editor** tersedia di `/studio.html`. Tanpa konfigurasi backend, data hanya disimpan lokal di browser. Untuk menerbitkan karya ke semua pengunjung, konfigurasikan Supabase dan akun admin sesuai bagian [Katalog publik dan Studio Editor admin](./DOKUMENTASI.md#-katalog-publik-dan-studio-editor-admin). Pengunjung umum hanya dapat melihat karya aktif; hanya admin terdaftar yang dapat mengubah katalog.

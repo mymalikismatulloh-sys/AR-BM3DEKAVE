@@ -1,11 +1,17 @@
 import { deleteTarget, getTargets, saveMindFile, saveTarget } from './studio-storage.js';
+import { isStudioAdmin, isSupabaseConfigured, signInAdmin, signOutAdmin } from './supabase-client.js';
 
 const listStatus = document.getElementById('list-status');
 const formStatus = document.getElementById('form-status');
 const mindStatus = document.getElementById('mind-status');
+const authStatus = document.getElementById('auth-status');
 const targetForm = document.getElementById('target-form');
 const targetList = document.getElementById('target-list');
 const formTitle = document.getElementById('form-title');
+const authPanel = document.getElementById('auth-panel');
+const authForm = document.getElementById('auth-form');
+const studioPanel = document.getElementById('studio-panel');
+const modeNote = document.getElementById('studio-mode-note');
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 let previewUrls = [];
 
@@ -19,14 +25,14 @@ function createId() {
 }
 
 async function loadTargets() {
-  setStatus(listStatus, 'Memuat daftar karya dari browser ini...');
+  setStatus(listStatus, isSupabaseConfigured ? 'Memuat katalog publik...' : 'Memuat daftar karya dari browser ini...');
   const targets = (await getTargets()).sort((left, right) => left.target_index - right.target_index);
   previewUrls.forEach(url => URL.revokeObjectURL(url));
   previewUrls = [];
   targetList.replaceChildren();
 
   if (!targets.length) {
-    setStatus(listStatus, 'Belum ada karya tersimpan di browser ini.');
+    setStatus(listStatus, isSupabaseConfigured ? 'Belum ada karya yang diterbitkan.' : 'Belum ada karya tersimpan di browser ini.');
     return targets;
   }
   setStatus(listStatus, '');
@@ -44,7 +50,7 @@ async function loadTargets() {
     title.textContent = target.title;
     const meta = document.createElement('div');
     meta.className = 'target-meta';
-    meta.textContent = `Index ${target.target_index} · ${target.content_type} · ${target.enabled ? 'Aktif' : 'Nonaktif'}`;
+    meta.textContent = `Index ${target.target_index} · ${target.content_type} · ${target.enabled ? (isSupabaseConfigured ? 'Terbit' : 'Aktif') : 'Nonaktif'}`;
     info.append(title, meta);
     const actions = document.createElement('div');
     actions.className = 'row-actions';
@@ -95,7 +101,8 @@ function resetForm() {
 }
 
 async function removeTarget(target) {
-  if (!window.confirm(`Hapus karya "${target.title}" dari katalog browser ini?`)) return;
+  const destination = isSupabaseConfigured ? 'katalog publik untuk semua pengunjung' : 'katalog browser ini';
+  if (!window.confirm(`Hapus karya "${target.title}" dari ${destination}?`)) return;
   try {
     await deleteTarget(target.id);
     if (document.getElementById('record-id').value === target.id) resetForm();
@@ -115,7 +122,7 @@ targetForm.addEventListener('submit', async event => {
   event.preventDefault();
   const submitButton = targetForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
-  setStatus(formStatus, 'Menyimpan di browser ini...');
+  setStatus(formStatus, isSupabaseConfigured ? 'Menerbitkan karya untuk pengunjung...' : 'Menyimpan di browser ini...');
   try {
     const id = document.getElementById('record-id').value;
     const existingTargets = await getTargets();
@@ -156,6 +163,8 @@ targetForm.addEventListener('submit', async event => {
       position_y: Number(document.getElementById('position-y').value),
       position_z: Number(document.getElementById('position-z').value),
       enabled: document.getElementById('enabled').value === 'true',
+      _marker_url: existing?._marker_url,
+      _content_url: existing?._content_url,
       updated_at: new Date().toISOString()
     };
     if (!target.marker_blob || !target.content_blob) {
@@ -164,7 +173,13 @@ targetForm.addEventListener('submit', async event => {
     await saveTarget(target);
     resetForm();
     await loadTargets();
-    setStatus(formStatus, 'Tersimpan di browser ini. Perubahan belum dipublikasikan ke pengunjung lain.', 'success');
+    setStatus(
+      formStatus,
+      isSupabaseConfigured
+        ? 'Karya berhasil diterbitkan dan akan tampil untuk semua pengunjung.'
+        : 'Tersimpan di browser ini. Perubahan belum dipublikasikan ke pengunjung lain.',
+      'success'
+    );
   } catch (error) {
     setStatus(formStatus, error.message, 'error');
   } finally {
@@ -194,12 +209,16 @@ document.getElementById('mind-form').addEventListener('submit', async event => {
   }
   const button = event.currentTarget.querySelector('button[type="submit"]');
   button.disabled = true;
-  setStatus(mindStatus, 'Menyimpan file tracking di browser ini...');
+  setStatus(mindStatus, isSupabaseConfigured ? 'Menerbitkan file tracking...' : 'Menyimpan file tracking di browser ini...');
   try {
     await validateFile(file, 'tracking');
     await saveMindFile(file);
     event.currentTarget.reset();
-    setStatus(mindStatus, 'File tracking tersimpan di browser ini, belum dipublikasikan.', 'success');
+    setStatus(
+      mindStatus,
+      isSupabaseConfigured ? 'File marker berhasil diterbitkan untuk semua pengunjung.' : 'File tracking tersimpan di browser ini, belum dipublikasikan.',
+      'success'
+    );
   } catch (error) {
     setStatus(mindStatus, error.message, 'error');
   } finally {
@@ -207,4 +226,92 @@ document.getElementById('mind-form').addEventListener('submit', async event => {
   }
 });
 
-loadTargets().catch(error => setStatus(listStatus, error.message, 'error'));
+async function showAdminWorkspace() {
+  authPanel.classList.add('hidden');
+  studioPanel.classList.remove('hidden');
+  try {
+    await loadTargets();
+  } catch (error) {
+    setStatus(listStatus, error.message, 'error');
+  }
+}
+
+function showAdminSignIn(message = '', type = '') {
+  studioPanel.classList.add('hidden');
+  authPanel.classList.remove('hidden');
+  authForm.classList.remove('hidden');
+  document.getElementById('sign-out-button').classList.add('hidden');
+  document.getElementById('auth-title').textContent = 'Masuk sebagai admin';
+  document.getElementById('auth-description').textContent = 'Masuk untuk mengelola karya yang tampil bagi semua pengunjung.';
+  setStatus(authStatus, message, type);
+}
+
+async function initializeStudio() {
+  if (!isSupabaseConfigured) {
+    modeNote.textContent = 'Mode lokal tanpa login: data dan file hanya tersimpan di browser/perangkat ini. Isi konfigurasi Supabase dan terapkan supabase/schema.sql untuk menerbitkan karya ke semua pengunjung.';
+    studioPanel.classList.remove('hidden');
+    await loadTargets();
+    return;
+  }
+
+  modeNote.textContent = 'Mode publik: pengunjung dapat melihat karya aktif. Hanya akun admin yang terdaftar yang dapat mengubah atau menerbitkan karya.';
+  authPanel.classList.remove('hidden');
+  authForm.classList.add('hidden');
+  document.getElementById('sign-out-button').classList.remove('hidden');
+  document.getElementById('auth-title').textContent = 'Memeriksa akses admin';
+  document.getElementById('auth-description').textContent = 'Katalog publik hanya dapat dikelola oleh admin yang berwenang.';
+  setStatus(authStatus, 'Memeriksa sesi dan izin admin...');
+
+  try {
+    if (await isStudioAdmin()) {
+      await showAdminWorkspace();
+      return;
+    }
+    await signOutAdmin();
+    showAdminSignIn('Masuk dengan akun admin yang sudah didaftarkan pada Supabase.');
+  } catch (error) {
+    authForm.classList.add('hidden');
+    document.getElementById('sign-out-button').classList.remove('hidden');
+    setStatus(authStatus, error.message, 'error');
+  }
+}
+
+authForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const submitButton = document.getElementById('auth-submit');
+  submitButton.disabled = true;
+  setStatus(authStatus, 'Memverifikasi akun admin...');
+  try {
+    await signInAdmin(
+      document.getElementById('admin-email').value.trim(),
+      document.getElementById('admin-password').value
+    );
+    if (!await isStudioAdmin()) {
+      await signOutAdmin();
+      throw new Error('Akun berhasil masuk, tetapi belum memiliki hak admin. Daftarkan user ID di tabel studio_admins.');
+    }
+    authForm.reset();
+    await showAdminWorkspace();
+  } catch (error) {
+    showAdminSignIn(error.message, 'error');
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+document.getElementById('sign-out-button').addEventListener('click', async () => {
+  const button = document.getElementById('sign-out-button');
+  button.disabled = true;
+  try {
+    await signOutAdmin();
+    showAdminSignIn('Anda sudah keluar dari akun admin.');
+  } catch (error) {
+    setStatus(authStatus, error.message, 'error');
+  } finally {
+    button.disabled = false;
+  }
+});
+
+initializeStudio().catch(error => {
+  setStatus(isSupabaseConfigured ? authStatus : listStatus, error.message, 'error');
+});
