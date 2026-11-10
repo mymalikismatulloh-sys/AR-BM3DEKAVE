@@ -38,7 +38,7 @@ Proyek ini dibuat menggunakan teknologi web standar sehingga sangat ringan dan k
 
 | Komponen | Teknologi | Keterangan |
 | :--- | :--- | :--- |
-| **AR Engine** | [MindAR.js v1.2.0](https://hiukim.github.io/mind-ar-js-doc/) | Engine WebAR open-source untuk pelacakan gambar menggunakan WebGL & WebAssembly |
+| **AR Engine** | [MindAR.js v1.2.0](https://hiukim.github.io/mind-ar-js-doc/) | Engine WebAR open-source untuk pelacakan gambar menggunakan WebGL & WebAssembly; pose memakai filter `filterMinCF: 0.0001` dan `filterBeta: 1000` untuk mengurangi jitter tanpa mengubah indeks target |
 | **3D Rendering** | [A-Frame v1.3.0](https://aframe.io/) & [Three.js](https://threejs.org/) | Framework grafis 3D declaratif berbasis HTML WebGL |
 | **Bahasa Utama** | HTML5, CSS3, JavaScript ES6+ | Struktur, UI futuristik (*cyberpunk glassmorphism*), dan kontrol interaksi |
 | **Model Tracking** | `targets.mind` | Binary feature data yang diekstrak dari gambar target untuk pendeteksian kamera |
