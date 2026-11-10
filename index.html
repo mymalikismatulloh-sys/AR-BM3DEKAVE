@@ -597,10 +597,8 @@
       bottom: max(96px, calc(env(safe-area-inset-bottom) + 82px));
       z-index: 1250;
       display: none;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      align-items: center;
-      justify-items: center;
-      gap: 6px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 7px;
       width: min(230px, calc(100vw - 28px));
       padding: 10px;
       border: 1px solid rgba(91, 203, 255, 0.65);
@@ -614,16 +612,79 @@
       display: grid;
     }
 
-    #rotation-controller h2 {
-      grid-column: 1 / -1;
-      margin: 0 0 2px;
-      color: #d7f4ff;
-      font-size: 12px;
-      text-align: center;
+    #rotation-drawer-toggle,
+    #toggle-drawer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 38px;
+      padding: 0 11px !important;
+      border-radius: 11px !important;
+      font-size: 11px !important;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    #rotation-drawer-toggle::after,
+    #toggle-drawer::after {
+      content: "⌄";
+      color: #9fe8ff;
+      font-size: 17px;
+      transition: transform .18s ease;
+    }
+
+    #rotation-drawer-toggle[aria-expanded="true"]::after,
+    #toggle-drawer[aria-expanded="true"]::after {
+      transform: rotate(180deg);
+    }
+
+    #rotation-drawer-content {
+      display: grid;
+      gap: 8px;
+    }
+
+    #rotation-drawer-content[hidden] {
+      display: none;
+    }
+
+    #rotation-drawer-content #pose-mode-controls {
+      grid-column: auto;
+    }
+
+    #rotation-pad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: center;
+      justify-items: center;
+      gap: 6px;
+    }
+
+    #rotation-pad > button {
+      width: 100%;
+      max-width: 46px;
+    }
+
+    #rotation-pad > span {
+      width: 100%;
+      height: 1px;
+    }
+
+    #rotation-controller #parallax-toggle {
+      grid-column: auto;
+      width: 100% !important;
+    }
+
+    #rotation-controller > button,
+    #controller-drawer button {
+      width: 100%;
+    }
+
+    #controller-drawer[hidden],
+    #social-links[hidden] {
+      display: none;
     }
 
     #rotation-controller button {
-      width: 100%;
       height: 42px;
       padding: 0;
       border: 1px solid rgba(91, 203, 255, 0.75);
@@ -647,19 +708,7 @@
       font-weight: 700;
     }
 
-    #parallax-toggle {
-      grid-column: 1 / -1;
-      width: auto !important;
-      height: auto !important;
-      min-height: 38px;
-      padding: 7px 10px !important;
-      font-size: 12px !important;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
     #pose-mode-controls {
-      grid-column: 1 / -1;
       display: grid;
       gap: 5px;
       width: 100%;
@@ -680,7 +729,7 @@
     }
 
     #pose-mode-buttons button {
-      width: auto;
+      width: 100%;
       height: 34px;
       padding: 0 3px;
       border-radius: 9px;
@@ -695,44 +744,17 @@
     }
 
     #toggle-drawer {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 38px !important;
-      padding: 0 11px !important;
-      border-radius: 11px !important;
-      font-size: 11px !important;
-      font-weight: 700;
-      text-align: left;
-    }
-
-    #toggle-drawer::after {
-      content: "⌄";
-      color: #9fe8ff;
-      font-size: 17px;
-      transition: transform .18s ease;
-    }
-
-    #toggle-drawer[aria-expanded="true"]::after {
-      transform: rotate(180deg);
+      width: 100%;
     }
 
     #controller-drawer {
-      grid-column: 1 / -1;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 7px;
       width: 100%;
     }
 
-    #controller-drawer[hidden],
-    #social-links[hidden] {
-      display: none;
-    }
-
     #controller-drawer button {
-      width: 100%;
       height: auto;
       min-height: 39px;
       padding: 7px 8px;
@@ -770,6 +792,26 @@
     #parallax-toggle[aria-pressed="true"] {
       border-color: #73e6bb !important;
       background: rgba(0, 145, 105, 0.62) !important;
+    }
+
+    #parallax-toggle {
+      min-height: 38px !important;
+      padding: 7px 10px !important;
+      font-size: 12px !important;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #controller-drawer button:active,
+    #controller-drawer button:focus-visible,
+    #rotation-drawer-toggle:focus-visible,
+    #toggle-drawer:focus-visible {
+      outline: 2px solid rgba(177, 238, 255, 0.95);
+      outline-offset: 2px;
+    }
+
+    #rotation-drawer-content {
+      min-width: 0;
     }
 
     #gesture-hint {
@@ -886,22 +928,26 @@
   </svg>
   <div id="gesture-hint" role="status" aria-live="polite"></div>
   <section id="rotation-controller" aria-label="Kontrol karya AR" aria-hidden="true">
-    <h2>Sudut & Rotasi</h2>
-    <div id="pose-mode-controls">
-      <h3>Mode sudut</h3>
-      <div id="pose-mode-buttons" role="group" aria-label="Pilih mode sudut karya">
-        <button type="button" data-pose-mode="attached" aria-pressed="true">Tempel</button>
-        <button type="button" data-pose-mode="angle" aria-pressed="false">45°</button>
-        <button type="button" data-pose-mode="free" aria-pressed="false">Bebas</button>
+    <button id="rotation-drawer-toggle" type="button" aria-expanded="false" aria-controls="rotation-drawer-content">Sudut & Rotasi</button>
+    <div id="rotation-drawer-content" hidden>
+      <div id="pose-mode-controls">
+        <h3>Mode sudut</h3>
+        <div id="pose-mode-buttons" role="group" aria-label="Pilih mode sudut karya">
+          <button type="button" data-pose-mode="attached" aria-pressed="true">Tempel</button>
+          <button type="button" data-pose-mode="angle" aria-pressed="false">45°</button>
+          <button type="button" data-pose-mode="free" aria-pressed="false">Bebas</button>
+        </div>
       </div>
+      <div id="rotation-pad" role="group" aria-label="Putar karya">
+        <span aria-hidden="true"></span>
+        <button type="button" data-axis="x" data-step="-15" aria-label="Putar ke atas 15 derajat">↑</button>
+        <span aria-hidden="true"></span>
+        <button type="button" data-axis="y" data-step="-15" aria-label="Putar ke kiri 15 derajat">←</button>
+        <button type="button" data-axis="x" data-step="15" aria-label="Putar ke bawah 15 derajat">↓</button>
+        <button type="button" data-axis="y" data-step="15" aria-label="Putar ke kanan 15 derajat">→</button>
+      </div>
+      <button id="parallax-toggle" type="button" aria-pressed="false">Visual: Normal</button>
     </div>
-    <span></span>
-    <button type="button" data-axis="x" data-step="-15" aria-label="Putar ke atas 15 derajat">↑</button>
-    <span></span>
-    <button type="button" data-axis="y" data-step="-15" aria-label="Putar ke kiri 15 derajat">←</button>
-    <button type="button" data-axis="x" data-step="15" aria-label="Putar ke bawah 15 derajat">↓</button>
-    <button type="button" data-axis="y" data-step="15" aria-label="Putar ke kanan 15 derajat">→</button>
-    <button id="parallax-toggle" type="button" aria-pressed="false">Visual: Normal</button>
     <button id="toggle-drawer" type="button" aria-expanded="false" aria-controls="controller-drawer">Alat lainnya</button>
     <div id="controller-drawer" hidden>
       <button id="drawer-reset" type="button">Atur ulang</button>
@@ -939,6 +985,8 @@
     const targetIndicatorShape = document.getElementById('target-indicator-shape');
     const gestureHint = document.getElementById('gesture-hint');
     const rotationController = document.getElementById('rotation-controller');
+    const rotationDrawerButton = document.getElementById('rotation-drawer-toggle');
+    const rotationDrawer = document.getElementById('rotation-drawer-content');
     const parallaxToggle = document.getElementById('parallax-toggle');
     const poseModeButtons = document.getElementById('pose-mode-buttons');
     const drawerButton = document.getElementById('toggle-drawer');
@@ -1381,6 +1429,8 @@
     function closeDrawer() {
       controllerDrawer.hidden = true;
       drawerButton.setAttribute('aria-expanded', 'false');
+      rotationDrawer.hidden = true;
+      rotationDrawerButton.setAttribute('aria-expanded', 'false');
       document.getElementById('social-links').hidden = true;
       linksButton.setAttribute('aria-expanded', 'false');
     }
@@ -1657,6 +1707,21 @@
       controllerDrawer.hidden = !isOpen;
       drawerButton.setAttribute('aria-expanded', String(isOpen));
       if (!isOpen) {
+        document.getElementById('social-links').hidden = true;
+        linksButton.setAttribute('aria-expanded', 'false');
+      } else {
+        rotationDrawer.hidden = true;
+        rotationDrawerButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    rotationDrawerButton.addEventListener('click', () => {
+      const isOpen = rotationDrawer.hidden;
+      rotationDrawer.hidden = !isOpen;
+      rotationDrawerButton.setAttribute('aria-expanded', String(isOpen));
+      if (isOpen) {
+        controllerDrawer.hidden = true;
+        drawerButton.setAttribute('aria-expanded', 'false');
         document.getElementById('social-links').hidden = true;
         linksButton.setAttribute('aria-expanded', 'false');
       }
