@@ -594,17 +594,17 @@
     #rotation-controller {
       position: fixed;
       right: max(14px, env(safe-area-inset-right));
-      bottom: max(76px, calc(env(safe-area-inset-bottom) + 64px));
+      bottom: max(96px, calc(env(safe-area-inset-bottom) + 82px));
       z-index: 1250;
       display: none;
-      grid-template-columns: repeat(3, 44px);
-      grid-template-rows: auto auto repeat(2, 44px) auto;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       align-items: center;
       justify-items: center;
       gap: 6px;
+      width: min(230px, calc(100vw - 28px));
       padding: 10px;
       border: 1px solid rgba(91, 203, 255, 0.65);
-      border-radius: 16px;
+      border-radius: 18px;
       background: rgba(0, 13, 40, 0.86);
       box-shadow: 0 0 18px rgba(0, 153, 255, 0.35);
       backdrop-filter: blur(10px);
@@ -623,7 +623,7 @@
     }
 
     #rotation-controller button {
-      width: 42px;
+      width: 100%;
       height: 42px;
       padding: 0;
       border: 1px solid rgba(91, 203, 255, 0.75);
@@ -694,170 +694,82 @@
       box-shadow: 0 0 10px rgba(65, 230, 177, 0.3);
     }
 
-    #parallax-toggle[aria-pressed="true"] {
-      border-color: #73e6bb !important;
-      background: rgba(0, 145, 105, 0.62) !important;
+    #toggle-drawer {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 38px !important;
+      padding: 0 11px !important;
+      border-radius: 11px !important;
+      font-size: 11px !important;
+      font-weight: 700;
+      text-align: left;
     }
 
-    #game-drawer {
-      position: fixed;
-      top: 50%;
-      left: -150px;
-      width: 300px;
-      height: 300px;
-      z-index: 1300;
-      border: 1px solid rgba(91, 203, 255, 0.75);
-      border-left: 0;
-      border-radius: 0 150px 150px 0;
-      background: radial-gradient(ellipse at right, rgba(0, 117, 255, 0.28), rgba(0, 13, 40, 0.9) 72%);
-      box-shadow: 0 0 20px rgba(0, 153, 255, 0.52), inset -8px 0 24px rgba(0, 153, 255, 0.2);
-      backdrop-filter: blur(12px);
-      transform: translate(-90px, -50%);
-      transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+    #toggle-drawer::after {
+      content: "⌄";
+      color: #9fe8ff;
+      font-size: 17px;
+      transition: transform .18s ease;
+    }
+
+    #toggle-drawer[aria-expanded="true"]::after {
+      transform: rotate(180deg);
+    }
+
+    #controller-drawer {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+      width: 100%;
+    }
+
+    #controller-drawer[hidden],
+    #social-links[hidden] {
       display: none;
     }
 
-    #game-drawer.visible {
-      display: block;
-    }
-
-    #game-drawer.open {
-      transform: translate(0, -50%);
-    }
-
-    #game-drawer.open #drawer-wheel {
-      pointer-events: auto;
-    }
-
-    #game-drawer button {
-      border: 1px solid rgba(91, 203, 255, 0.8);
-      background: rgba(0, 117, 255, 0.34);
-      color: white;
-      box-shadow: 0 0 12px rgba(0, 153, 255, 0.62), inset 0 0 12px rgba(0, 153, 255, 0.2);
-      backdrop-filter: blur(10px);
-      text-shadow: 0 0 8px rgba(110, 220, 255, 0.9);
-      cursor: pointer;
-    }
-
-    #game-drawer button:active,
-    #game-drawer button:focus-visible,
-    #social-links a:focus-visible {
-      outline: 2px solid rgba(177, 238, 255, 0.95);
-      outline-offset: 2px;
-      background: rgba(0, 145, 255, 0.6);
-      box-shadow: 0 0 20px rgba(0, 174, 255, 1), inset 0 0 14px rgba(0, 153, 255, 0.3);
-    }
-
-    #toggle-drawer {
-      position: absolute;
-      top: 8px;
-      right: 0;
-      width: 60px;
-      min-height: 54px;
-      border-radius: 18px 0 0 18px;
-      font-size: 12px;
-      font-weight: 700;
+    #controller-drawer button {
+      width: 100%;
+      height: auto;
+      min-height: 39px;
+      padding: 7px 8px;
+      border-radius: 10px;
+      font-size: 10px;
       line-height: 1.25;
-    }
-
-    #toggle-drawer::before {
-      content: "›";
-      display: block;
-      font-size: 24px;
-      line-height: 20px;
-    }
-
-    #game-drawer.open #toggle-drawer::before {
-      content: "‹";
-    }
-
-    #drawer-wheel {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      touch-action: none;
-      cursor: grab;
-    }
-
-    #drawer-wheel:active {
-      cursor: grabbing;
-    }
-
-    #drawer-wheel::before {
-      content: "";
-      position: absolute;
-      left: 178px;
-      top: 103px;
-      width: 94px;
-      height: 94px;
-      border: 1px dashed rgba(128, 223, 255, 0.45);
-      border-radius: 50%;
-      box-shadow: 0 0 12px rgba(0, 153, 255, 0.22);
-      pointer-events: none;
-    }
-
-    #drawer-wheel::after {
-      content: "↻";
-      position: absolute;
-      left: 207px;
-      top: 131px;
-      color: rgba(177, 238, 255, 0.88);
-      font-size: 28px;
-      line-height: 36px;
-      text-shadow: 0 0 12px rgba(0, 174, 255, 0.95);
-      pointer-events: none;
-    }
-
-    .drawer-action {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 70px;
-      min-height: 48px;
-      padding: 6px;
-      border-radius: 16px;
-      font-size: 12px;
-      font-weight: 700;
-      opacity: 0;
-      pointer-events: none;
-      transform: translate(-50%, -50%) rotate(var(--counter-rotation, 0deg));
-      transition: opacity 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    #game-drawer.open .drawer-action {
-      opacity: 1;
-      pointer-events: auto;
+      text-shadow: none;
     }
 
     #social-links {
-      position: absolute;
-      top: 50%;
-      left: calc(100% + 6px);
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      width: min(144px, calc(100vw - 166px));
-      transform: translateY(-50%);
-    }
-
-    #game-drawer.links-open #social-links {
-      display: flex;
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
     }
 
     #social-links a {
       display: block;
-      padding: 13px 12px;
-      border: 1px solid rgba(91, 203, 255, 0.85);
-      border-radius: 14px;
-      background: rgba(0, 30, 74, 0.9);
+      padding: 10px 8px;
+      border: 1px solid rgba(91, 203, 255, 0.65);
+      border-radius: 10px;
+      background: rgba(0, 30, 74, 0.78);
       color: white;
-      font-size: 14px;
+      font-size: 10px;
       font-weight: 700;
       text-align: center;
       text-decoration: none;
-      box-shadow: 0 0 12px rgba(0, 153, 255, 0.58), inset 0 0 12px rgba(0, 153, 255, 0.18);
-      backdrop-filter: blur(10px);
-      text-shadow: 0 0 8px rgba(110, 220, 255, 0.9);
+    }
+
+    #social-links a:focus-visible {
+      outline: 2px solid rgba(177, 238, 255, 0.95);
+      outline-offset: 2px;
+    }
+
+    #parallax-toggle[aria-pressed="true"] {
+      border-color: #73e6bb !important;
+      background: rgba(0, 145, 105, 0.62) !important;
     }
 
     #gesture-hint {
@@ -973,7 +885,7 @@
     <polygon id="target-indicator-shape" points="0,0 0,0 0,0 0,0"></polygon>
   </svg>
   <div id="gesture-hint" role="status" aria-live="polite"></div>
-  <section id="rotation-controller" aria-label="Kontrol rotasi karya" aria-hidden="true">
+  <section id="rotation-controller" aria-label="Kontrol karya AR" aria-hidden="true">
     <h2>Sudut & Rotasi</h2>
     <div id="pose-mode-controls">
       <h3>Mode sudut</h3>
@@ -990,21 +902,19 @@
     <button type="button" data-axis="x" data-step="15" aria-label="Putar ke bawah 15 derajat">↓</button>
     <button type="button" data-axis="y" data-step="15" aria-label="Putar ke kanan 15 derajat">→</button>
     <button id="parallax-toggle" type="button" aria-pressed="false">Visual: Normal</button>
-  </section>
-  <div id="game-drawer" aria-label="Menu AR">
-    <button id="toggle-drawer" type="button" aria-expanded="false" aria-controls="drawer-reset drawer-toggle-image drawer-toggle-links">MENU</button>
-    <div id="drawer-wheel">
-      <button id="drawer-reset" class="drawer-action" type="button">Atur ulang</button>
-      <button id="drawer-toggle-image" class="drawer-action" type="button">Sembunyikan gambar</button>
-      <button id="drawer-toggle-links" class="drawer-action" type="button" aria-expanded="false" aria-controls="social-links">Tautan</button>
+    <button id="toggle-drawer" type="button" aria-expanded="false" aria-controls="controller-drawer">Alat lainnya</button>
+    <div id="controller-drawer" hidden>
+      <button id="drawer-reset" type="button">Atur ulang</button>
+      <button id="drawer-toggle-image" type="button">Sembunyikan gambar</button>
+      <button id="drawer-toggle-links" type="button" aria-expanded="false" aria-controls="social-links">Tautan sekolah</button>
+      <nav id="social-links" aria-label="Tautan sekolah" hidden>
+        <a href="https://smkbinamandirimultimedia.sch.id/" target="_blank" rel="noopener noreferrer">Website</a>
+        <a href="https://www.instagram.com/smkbm_3/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      </nav>
     </div>
-    <nav id="social-links" aria-label="Tautan sekolah">
-      <a href="https://smkbinamandirimultimedia.sch.id/" target="_blank" rel="noopener noreferrer">Website</a>
-      <a href="https://www.instagram.com/smkbm_3/" target="_blank" rel="noopener noreferrer">Instagram</a>
-    </nav>
-  </div>
+  </section>
   <!-- Ganti imageTargetSrc dengan file .mind Anda -->
-  <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 1000; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+  <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 10; uiScanning: #scanning-overlay;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     <a-assets></a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -1031,9 +941,8 @@
     const rotationController = document.getElementById('rotation-controller');
     const parallaxToggle = document.getElementById('parallax-toggle');
     const poseModeButtons = document.getElementById('pose-mode-buttons');
-    const gameDrawer = document.getElementById('game-drawer');
-    const drawerWheel = document.getElementById('drawer-wheel');
     const drawerButton = document.getElementById('toggle-drawer');
+    const controllerDrawer = document.getElementById('controller-drawer');
     const resetButton = document.getElementById('drawer-reset');
     const toggleButton = document.getElementById('drawer-toggle-image');
     const linksButton = document.getElementById('drawer-toggle-links');
@@ -1074,9 +983,6 @@
     let guideAnimationFrame = null;
     let guideHideTimeout = null;
     let scanGuidanceTimer = null;
-    let drawerPointerId = null;
-    let lastDrawerPointerAngle = 0;
-    let drawerRotation = 0;
     const activePointers = new Map();
     let pinchStartDistance = 0;
     let pinchStartScale = 1;
@@ -1312,32 +1218,8 @@
       }, SCAN_GUIDE_VISIBLE_MS);
     }
 
-    function updateDrawerWheel() {
-      const actions = [resetButton, toggleButton, linksButton];
-      const baseAngles = [-90, 30, 150];
-      const pivotX = 225;
-      const pivotY = 150;
-      const radius = 40;
-      actions.forEach((button, index) => {
-        const angle = (baseAngles[index] + drawerRotation) * Math.PI / 180;
-        const centerX = pivotX + Math.cos(angle) * radius;
-        const centerY = pivotY + Math.sin(angle) * radius;
-        button.style.left = `${centerX}px`;
-        button.style.top = `${centerY}px`;
-        button.style.setProperty('--counter-rotation', `${-drawerRotation}deg`);
-      });
-    }
-
-    function getDrawerPointerAngle(event) {
-      const bounds = gameDrawer.getBoundingClientRect();
-      const pivotX = bounds.left + 225;
-      const pivotY = bounds.top + 150;
-      return Math.atan2(event.clientY - pivotY, event.clientX - pivotX) * 180 / Math.PI;
-    }
-
     function updateImageVisibility() {
       rotatableImage.object3D.visible = targetVisible && imageEnabled;
-      gameDrawer.classList.toggle('visible', targetVisible);
       rotationController.classList.toggle('visible', targetVisible && imageEnabled);
       rotationController.setAttribute('aria-hidden', String(!targetVisible || !imageEnabled));
       toggleButton.textContent = imageEnabled ? 'Sembunyikan gambar' : 'Tampilkan gambar';
@@ -1497,8 +1379,9 @@
     }
 
     function closeDrawer() {
-      gameDrawer.classList.remove('open', 'links-open');
+      controllerDrawer.hidden = true;
       drawerButton.setAttribute('aria-expanded', 'false');
+      document.getElementById('social-links').hidden = true;
       linksButton.setAttribute('aria-expanded', 'false');
     }
 
@@ -1606,7 +1489,7 @@
 
       document.addEventListener('pointerdown', event => {
         if (!targetVisible || !imageEnabled ||
-            (event.target instanceof Element && event.target.closest('#game-drawer, #rotation-controller'))) return;
+            (event.target instanceof Element && event.target.closest('#rotation-controller'))) return;
         if (!(event.target instanceof Node) || !canvas.contains(event.target)) return;
 
         activePointers.set(event.pointerId, {
@@ -1770,10 +1653,11 @@
     });
 
     drawerButton.addEventListener('click', () => {
-      const isOpen = gameDrawer.classList.toggle('open');
+      const isOpen = controllerDrawer.hidden;
+      controllerDrawer.hidden = !isOpen;
       drawerButton.setAttribute('aria-expanded', String(isOpen));
       if (!isOpen) {
-        gameDrawer.classList.remove('links-open');
+        document.getElementById('social-links').hidden = true;
         linksButton.setAttribute('aria-expanded', 'false');
       }
     });
@@ -1821,36 +1705,12 @@
     });
 
     linksButton.addEventListener('click', () => {
-      const isOpen = gameDrawer.classList.toggle('links-open');
+      const socialLinks = document.getElementById('social-links');
+      const isOpen = socialLinks.hidden;
+      socialLinks.hidden = !isOpen;
       linksButton.setAttribute('aria-expanded', String(isOpen));
       showGestureHint(isOpen ? 'Pilih Website atau Instagram untuk membuka tautan.' : 'Panel tautan ditutup.');
     });
-
-    drawerWheel.addEventListener('pointerdown', event => {
-      if (!gameDrawer.classList.contains('open') ||
-          (event.target instanceof Element && event.target.closest('button, a'))) return;
-      drawerPointerId = event.pointerId;
-      lastDrawerPointerAngle = getDrawerPointerAngle(event);
-      drawerWheel.setPointerCapture(event.pointerId);
-      event.preventDefault();
-    });
-
-    drawerWheel.addEventListener('pointermove', event => {
-      if (event.pointerId !== drawerPointerId) return;
-      const currentAngle = getDrawerPointerAngle(event);
-      let delta = currentAngle - lastDrawerPointerAngle;
-      if (delta > 180) delta -= 360;
-      if (delta < -180) delta += 360;
-      drawerRotation = (drawerRotation + delta) % 360;
-      lastDrawerPointerAngle = currentAngle;
-      updateDrawerWheel();
-    });
-
-    const stopDrawerRotation = event => {
-      if (event.pointerId === drawerPointerId) drawerPointerId = null;
-    };
-    drawerWheel.addEventListener('pointerup', stopDrawerRotation);
-    drawerWheel.addEventListener('pointercancel', stopDrawerRotation);
 
     targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
     targets.forEach(target => {
@@ -1933,7 +1793,6 @@
         activeParallaxProfile = null;
         activePointer = null;
         activePointers.clear();
-        drawerPointerId = null;
         window.clearTimeout(gestureHintTimeout);
         gestureHint.classList.remove('visible');
         if (animationFrame !== null) {
@@ -1959,7 +1818,6 @@
     if (targets.length) {
       setSelectedGalleryTarget(targets[0].id.replace('image-target-', ''));
     }
-    updateDrawerWheel();
     resetScanGuide();
     retryCameraButton.addEventListener('click', startAR);
 
@@ -2189,7 +2047,7 @@
       assets.querySelectorAll('[id^="target-image-"], [id^="ar-content-"]').forEach(asset => asset.remove());
       scene.setAttribute(
         'mindar-image',
-        `imageTargetSrc: ${mindFile?.file ? URL.createObjectURL(mindFile.file) : 'targets.mind'}; autoStart: false; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 1000; uiScanning: #scanning-overlay;`
+        `imageTargetSrc: ${mindFile?.file ? URL.createObjectURL(mindFile.file) : 'targets.mind'}; autoStart: false; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 10; uiScanning: #scanning-overlay;`
       );
       const galleryItems = records.map(record => {
         const markerUrl = record.marker_blob
