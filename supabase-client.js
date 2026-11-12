@@ -35,7 +35,7 @@ async function request(path, options = {}, accessToken = '') {
     ...options,
     headers: {
       apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${accessToken || SUPABASE_ANON_KEY}`,
+      ...(accessToken ? { Authorization: 'Bearer ' + accessToken } : {}),
       ...options.headers
     }
   });
